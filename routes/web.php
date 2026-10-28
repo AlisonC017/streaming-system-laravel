@@ -3,5 +3,9 @@
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('modules.index');
+});
+
+Route::get('/lol', function () {
+    return view('modules.series.show');
 });
