@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    'tvmaze' => [
+        'base_url' => env('TVMAZE_BASE_URL', 'https://api.tvmaze.com'),
+    ],
+
+    'tmdb' => [
+        'key' => env('TMDB_API_KEY'),
+    ],
+
 ];
