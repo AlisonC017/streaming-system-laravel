@@ -21,13 +21,17 @@ class Fuente extends Model
         'prioridad',
         'tiempo_respuesta',
         'ultima_verificacion',
-        'fecha_expiracion'
+        'fecha_expiracion',
+        'huella',
+        'calidad',
+        'firmada'
     ];
 
     protected $casts = [
-        'subtitulos' => 'array',
+        'subtitulos' => 'json',
         'prioridad' => 'integer',
         'tiempo_respuesta' => 'integer',
+        'firmada' => 'boolean',
         'ultima_verificacion' => 'datetime',
         'fecha_expiracion' => 'datetime'
     ];

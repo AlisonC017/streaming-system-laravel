@@ -6,10 +6,22 @@ use Illuminate\Http\Request;
 use App\Models\Contenido;
 use App\Models\Temporada;
 use App\Models\Episodio;
-use App\Models\Fuente;
+use App\Services\Reproductor\FuenteManager;
+use App\Services\Reproductor\ProveedorReproduccionService;
 
 class ReproductorController extends Controller
 {
+    protected $fuenteManager;
+    protected $reproduccion;
+
+    public function __construct(
+        FuenteManager $fuenteManager,
+        ProveedorReproduccionService $reproduccion
+    ) {
+        $this->fuenteManager = $fuenteManager;
+        $this->reproduccion = $reproduccion;
+    }
+
     public function mostrar($contenidoId)
     {
         $contenido = Contenido::findOrFail($contenidoId);
@@ -41,15 +53,6 @@ class ReproductorController extends Controller
             }
         }
 
-        /* 
-        Esto es para cuando si se use una vista real, uso la de abajo porque es de prueba
-        return view('reproductor.player', compact(
-            'contenido',
-            'episodio',
-            'temporada',
-            'episodios'
-        ));
-        */
         return view('reproductor', compact(
             'contenido',
             'episodio',
@@ -86,15 +89,6 @@ class ReproductorController extends Controller
                 ->get();
         }
 
-        /* 
-        Esto es para cuando si se use una vista real, uso la de abajo porque es de prueba
-        return view('reproductor.player', compact(
-            'contenido',
-            'episodio',
-            'temporada',
-            'episodios'
-        ));
-        */
         return view('reproductor', compact(
             'contenido',
             'episodio',
@@ -105,21 +99,26 @@ class ReproductorController extends Controller
 
     public function obtenerFuentes(Request $request)
     {
-        $request->validate([
+        $datos = $request->validate([
             'contenido_id' => 'required',
             'episodio_id' => 'nullable'
         ]);
 
-        $consulta = Fuente::where('contenido_id', $request->contenido_id)
-            ->where('estado', 'activa');
+        $contenido = Contenido::findOrFail($datos['contenido_id']);
 
-        if ($request->episodio_id) {
-            $consulta->where('episodio_id', $request->episodio_id);
-        } else {
-            $consulta->whereNull('episodio_id');
+        $episodio = null;
+
+        if (!empty($datos['episodio_id'])) {
+
+            $episodio = Episodio::where('_id', $datos['episodio_id'])
+                ->where('contenido_id', $contenido->_id)
+                ->firstOrFail();
         }
 
-        $fuentes = $consulta->orderBy('prioridad', 'desc')->get();
+        $fuentes = $this->reproduccion->obtenerFuentesReproduccion(
+            $contenido,
+            $episodio
+        );
 
         return response()->json([
             'fuentes' => $fuentes
@@ -134,34 +133,39 @@ class ReproductorController extends Controller
             'proveedor' => 'required|string|max:100',
             'url' => 'required|url',
             'tipo' => 'required|in:embed,mp4,hls',
-            'idioma' => 'required|string|max:50',
+            'idioma' => 'nullable|string|max:50',
             'subtitulos' => 'nullable|array',
-            'prioridad' => 'nullable|integer|min:0',
+            'prioridad' => 'nullable|integer|min:0'
         ]);
 
         $contenido = Contenido::findOrFail($datos['contenido_id']);
 
         if (!empty($datos['episodio_id'])) {
 
-            $episodio = Episodio::where('_id', $datos['episodio_id'])
+            Episodio::where('_id', $datos['episodio_id'])
                 ->where('contenido_id', $contenido->_id)
                 ->firstOrFail();
         }
 
-        $datos['estado'] = 'activa';
+        $datos['contenido_id'] = $contenido->_id;
 
-        Fuente::create($datos);
+        $fuente = $this->fuenteManager->guardarFuente($datos);
 
         return response()->json([
-            'mensaje' => 'Fuente guardada correctamente'
+            'mensaje' => 'Fuente registrada correctamente',
+            'fuente' => $fuente
         ]);
     }
 
     public function eliminarFuente($id)
     {
-        $fuente = Fuente::findOrFail($id);
+        $resultado = $this->fuenteManager->eliminarFuente($id);
 
-        $fuente->delete();
+        if (!$resultado) {
+            return response()->json([
+                'mensaje' => 'No se encontro la fuente'
+            ], 404);
+        }
 
         return response()->json([
             'mensaje' => 'Fuente eliminada correctamente'

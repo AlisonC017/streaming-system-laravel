@@ -4,6 +4,7 @@ namespace App\Services\Catalogo;
 
 use Illuminate\Support\Facades\Http;
 use App\Models\Contenido;
+use App\Models\Identificador;
 
 class TMDBService
 {
@@ -46,9 +47,8 @@ class TMDBService
 
     public function buscarSerie($nombre)
     {
-        $respuesta = $this->consultar('search/tv', [
-            'query' => $nombre,
-            'language' => 'es-ES'
+        $respuesta = $this->consultar('/search/tv', [
+            'query' => $nombre
         ]);
 
         return $respuesta['results'][0] ?? null;
@@ -56,17 +56,19 @@ class TMDBService
 
     public function obtenerTemporadas($tmdbId)
     {
-        return $this->consultar("tv/{$tmdbId}", [
-            'language' => 'es-ES'
-        ]);
+        return $this->consultar("/tv/{$tmdbId}");
     }
 
     public function obtenerEpisodios($tmdbId, $numeroTemporada)
     {
         return $this->consultar(
-            "tv/{$tmdbId}/season/{$numeroTemporada}",
-            ['language' => 'es-ES']
+            "/tv/{$tmdbId}/season/{$numeroTemporada}"
         );
+    }
+
+    public function obtenerIdsExternos($tmdbId)
+    {
+        return $this->consultar("/tv/{$tmdbId}/external_ids");
     }
 
     public function importarContenido($id, $tipo)
@@ -94,6 +96,7 @@ class TMDBService
                 'tipo' => $tipoContenido
             ],
             [
+                'tmdb_id' => $datos['id'],
                 'titulo' => $datos['title'] ?? $datos['name'] ?? 'Sin titulo',
                 'tipo' => $tipoContenido,
                 'descripcion' => $datos['overview'] ?? null,
@@ -105,6 +108,15 @@ class TMDBService
                 'estado' => $datos['status'] ?? null,
                 'puntuacion' => $datos['vote_average'] ?? null,
                 'popularidad' => $datos['popularity'] ?? null
+            ]
+        );
+
+        Identificador::updateOrCreate(
+            [
+                'contenido_id' => $contenido->_id
+            ],
+            [
+                'tmdb_id' => $datos['id']
             ]
         );
 

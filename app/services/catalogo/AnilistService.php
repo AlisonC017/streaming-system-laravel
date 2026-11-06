@@ -3,6 +3,7 @@
 namespace App\Services\Catalogo;
 
 use App\Models\Contenido;
+use App\Models\Identificador;
 use Illuminate\Support\Facades\Http;
 
 class AniListService
@@ -16,6 +17,7 @@ class AniListService
                 Page(page: 1, perPage: 20) {
                     media(search: $search, type: ANIME) {
                         id
+                        idMal
                         title {
                             romaji
                             english
@@ -55,6 +57,7 @@ class AniListService
             query ($id: Int) {
                 Media(id: $id, type: ANIME) {
                     id
+                    idMal
                     title {
                         romaji
                         english
@@ -95,25 +98,64 @@ class AniListService
             return null;
         }
 
+        $identificador = Identificador::where(
+            'anilist_id',
+            $anime['id']
+        )->first();
+
+        if (!$identificador && !empty($anime['idMal'])) {
+            $identificador = Identificador::where(
+                'mal_id',
+                $anime['idMal']
+            )->first();
+        }
+
+        $contenido = null;
+
+        if ($identificador) {
+            $contenido = Contenido::find($identificador->contenido_id);
+        }
+
+        if (!$contenido) {
+            $contenido = Contenido::where('proveedor_catalogo', 'anilist')
+                ->where('proveedor_id', $anime['id'])
+                ->first();
+        }
+
         $titulo = $anime['title']['english']
             ?? $anime['title']['romaji']
             ?? $anime['title']['native']
             ?? 'Anime sin titulo';
 
-        $contenido = Contenido::updateOrCreate(
+        $datosContenido = [
+            'id_mal' => $anime['idMal'] ?? null,
+            'titulo' => $titulo,
+            'tipo' => 'anime',
+            'proveedor_catalogo' => 'anilist',
+            'proveedor_id' => $anime['id'],
+            'descripcion' => $anime['description'] ?? null,
+            'imagen' => $anime['coverImage']['large'] ?? null,
+            'generos' => $anime['genres'] ?? [],
+            'estado' => strtolower($anime['status'] ?? ''),
+            'puntuacion' => isset($anime['averageScore'])
+                ? $anime['averageScore']
+                : null,
+            'popularidad' => $anime['popularity'] ?? null
+        ];
+
+        if ($contenido) {
+            $contenido->update($datosContenido);
+        } else {
+            $contenido = Contenido::create($datosContenido);
+        }
+
+        Identificador::updateOrCreate(
             [
-                'proveedor_catalogo' => 'anilist',
-                'proveedor_id' => $anime['id']
+                'contenido_id' => $contenido->_id
             ],
             [
-                'titulo' => $titulo,
-                'tipo' => 'anime',
-                'descripcion' => $anime['description'] ?? null,
-                'imagen' => $anime['coverImage']['large'] ?? null,
-                'generos' => $anime['genres'] ?? [],
-                'estado' => strtolower($anime['status'] ?? ''),
-                'puntuacion' => $anime['averageScore'] ?? null,
-                'popularidad' => $anime['popularity'] ?? null
+                'anilist_id' => $anime['id'],
+                'mal_id' => $anime['idMal'] ?? null
             ]
         );
 
@@ -141,9 +183,19 @@ class AniListService
         ]);
 
         if ($respuesta->successful()) {
-            return $respuesta->json()['data']['Page']['media'] ?? [];
+            $datos = $respuesta->json();
+
+            if (isset($datos['errors'])) {
+                throw new \Exception(
+                    'Error de AniList: ' . json_encode($datos['errors'])
+                );
+            }
+
+            return $datos['data']['Page']['media'] ?? [];
         }
 
-        return [];
+        throw new \Exception(
+            'AniList respondio con HTTP ' . $respuesta->status() . ': ' . $respuesta->body()
+        );
     }
 }

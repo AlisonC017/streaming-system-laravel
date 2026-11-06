@@ -7,7 +7,6 @@ use MongoDB\Laravel\Eloquent\Model;
 class Sincronizacion extends Model
 {
     protected $connection = 'mongodb';
-
     protected $collection = 'sincronizaciones_catalogo';
 
     protected $fillable = [
@@ -15,5 +14,11 @@ class Sincronizacion extends Model
         'ultima_pagina',
         'total_importados',
         'actualizado_en'
+    ];
+
+    protected $casts = [
+        'ultima_pagina' => 'integer',
+        'total_importados' => 'integer',
+        'actualizado_en' => 'datetime'
     ];
 }

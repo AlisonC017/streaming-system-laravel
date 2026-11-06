@@ -20,6 +20,7 @@ class Verificacion extends Model
 
     protected $casts = [
         'fecha' => 'datetime',
+        'resultado' => 'boolean',
         'codigo' => 'integer',
         'tiempo_respuesta' => 'integer'
     ];

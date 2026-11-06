@@ -36,17 +36,16 @@ Route::get('/reproductor/{contenidoId}/episodio/{episodioId}', [ReproductorContr
 Route::post('/reproductor/fuentes', [ReproductorController::class, 'obtenerFuentes'])
     ->name('reproductor.fuentes');
 
-Route::post('/reproductor/fuentes/guardar', [ReproductorController::class, 'guardarFuente'])
-    ->name('reproductor.fuentes.guardar');
+// Administracion de fuentes: protegidas hasta que exista autenticacion
+// Cuando haya login, cambiar 'solo.local' por ['auth', 'rol:admin']
+Route::middleware('solo.local')->group(function () {
 
-Route::post('/reproductor/fuentes/{id}/verificar', [ReproductorController::class, 'verificarFuente'])
-    ->name('reproductor.fuentes.verificar');
+    Route::post('/reproductor/fuentes/guardar', [ReproductorController::class, 'guardarFuente'])
+        ->name('reproductor.fuentes.guardar');
 
-Route::delete('/reproductor/fuentes/{id}', [ReproductorController::class, 'eliminarFuente'])
-    ->name('reproductor.fuentes.eliminar');
-
-Route::get('/reproductor/consultar-pelicula/{id}', [ReproductorController::class, 'consultarPelicula'])
-    ->name('reproductor.consultar.pelicula');
+    Route::delete('/reproductor/fuentes/{id}', [ReproductorController::class, 'eliminarFuente'])
+        ->name('reproductor.fuentes.eliminar');
+});
 
 Route::post('/progreso', [ControllerProgreso::class, 'guardar'])
     ->name('progreso.guardar');
@@ -56,20 +55,6 @@ Route::get('/progreso/{contenidoId}', [ControllerProgreso::class, 'obtener'])
 
 Route::get('/continuar-viendo', [ControllerProgreso::class, 'continuar'])
     ->name('progreso.continuar');
-
-Route::get('/anime/buscar', [ContenidoController::class, 'buscarAnime']);
-
-Route::post('/anime/importar/{id}', [ContenidoController::class, 'importarAnime']);
-
-Route::get('/peliculas/buscar', [ContenidoController::class, 'buscarPeliculas']);
-
-Route::get('/series/buscar', [ContenidoController::class, 'buscarSeries']);
-
-Route::post('/contenido/importar/{tipo}/{id}', [ContenidoController::class, 'importarContenido']);
-
-Route::get('/tvmaze/series/buscar', [ContenidoController::class, 'buscarSeriesTVmaze']);
-
-Route::post('/tvmaze/importar/{contenidoId}/{tvmazeId}', [ContenidoController::class, 'importarTemporadasYEpisodios']);
 
 Route::get('/catalogo', [ContenidoController::class, 'catalogo'])
     ->name('catalogo');
@@ -81,10 +66,17 @@ Route::get('/catalogo/{id}', [ContenidoController::class, 'mostrar'])
     ->name('catalogo.mostrar');
 
 //Este desastre es para probar el catalogo, no es parte del proyecto final, solo es para pruebas
+// Por defecto solo muestra lo que tiene fuentes disponibles. Con ?todos=1 muestra todo.
 
 Route::get('/prueba-catalogo', function (Request $request) {
 
+    $soloDisponibles = !$request->boolean('todos');
+
     $consulta = Contenido::query();
+
+    if ($soloDisponibles) {
+        $consulta->conFuentes();
+    }
 
     if ($request->tipo) {
         $consulta->where('tipo', $request->tipo);
@@ -108,17 +100,34 @@ Route::get('/prueba-catalogo', function (Request $request) {
 
         if ($contenidoSeleccionado) {
 
-            $temporadas = Temporada::where(
+            $idsEpisodios = $soloDisponibles
+                ? $contenidoSeleccionado->idsEpisodiosConFuentes()
+                : null;
+
+            $todasTemporadas = Temporada::where(
                 'contenido_id',
                 $contenidoSeleccionado->_id
             )->orderBy('numero')->get();
 
-            foreach ($temporadas as $temporada) {
+            foreach ($todasTemporadas as $temporada) {
 
-                $episodiosPorTemporada[(string) $temporada->_id] = Episodio::where(
+                $episodios = Episodio::where(
                     'temporada_id',
                     $temporada->_id
                 )->orderBy('numero')->get();
+
+                if ($idsEpisodios !== null) {
+                    $episodios = $episodios->filter(
+                        fn($episodio) => in_array((string) $episodio->_id, $idsEpisodios)
+                    )->values();
+
+                    if ($episodios->isEmpty()) {
+                        continue;
+                    }
+                }
+
+                $temporadas->push($temporada);
+                $episodiosPorTemporada[(string) $temporada->_id] = $episodios;
             }
         }
     }

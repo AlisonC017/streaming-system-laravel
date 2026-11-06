@@ -9,7 +9,7 @@ class ContenidoController extends Controller
 {
     public function catalogo()
     {
-        $contenidos = Contenido::orderBy('titulo')->get();
+        $contenidos = Contenido::conFuentes()->orderBy('titulo')->get();
 
         return view('catalogo.index', compact('contenidos'));
     }
@@ -19,7 +19,7 @@ class ContenidoController extends Controller
         $nombre = $request->input('nombre');
         $tipo = $request->input('tipo');
 
-        $consulta = Contenido::query();
+        $consulta = Contenido::conFuentes();
 
         if ($nombre) {
             $nombre = preg_quote($nombre, '/');

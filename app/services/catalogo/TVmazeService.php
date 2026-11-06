@@ -4,6 +4,7 @@ namespace App\Services\Catalogo;
 
 use Illuminate\Support\Facades\Http;
 use App\Models\Contenido;
+use App\Models\Identificador;
 use App\Models\Temporada;
 use App\Models\Episodio;
 
@@ -31,6 +32,13 @@ class TVmazeService
         ]) ?? [];
     }
 
+    public function buscarPorImdb($imdbId)
+    {
+        return $this->consultar('/lookup/shows', [
+            'imdb' => $imdbId
+        ]);
+    }
+
     public function obtenerSerie($id)
     {
         return $this->consultar('/shows/' . $id);
@@ -50,6 +58,15 @@ class TVmazeService
             return null;
         }
 
+        Identificador::updateOrCreate(
+            [
+                'contenido_id' => $contenido->_id
+            ],
+            [
+                'tvmaze_id' => $tvmazeId
+            ]
+        );
+
         $temporadasApi = $this->consultar('/shows/' . $tvmazeId . '/seasons');
 
         $episodiosApi = $this->consultar('/shows/' . $tvmazeId . '/episodes', [
@@ -64,7 +81,6 @@ class TVmazeService
         $totalEpisodios = 0;
 
         foreach ($temporadasApi as $datosTemporada) {
-
             $numero = $datosTemporada['number'] ?? 0;
 
             $temporada = Temporada::updateOrCreate(
@@ -85,7 +101,6 @@ class TVmazeService
         }
 
         foreach ($episodiosApi as $datosEpisodio) {
-
             $numeroTemporada = $datosEpisodio['season'] ?? 0;
 
             if (!isset($temporadasGuardadas[$numeroTemporada])) {
@@ -118,8 +133,10 @@ class TVmazeService
         }
 
         foreach ($temporadasGuardadas as $temporada) {
-
-            $cantidad = Episodio::where('temporada_id', $temporada->_id)->count();
+            $cantidad = Episodio::where(
+                'temporada_id',
+                $temporada->_id
+            )->count();
 
             $temporada->update([
                 'cantidad_episodios' => $cantidad

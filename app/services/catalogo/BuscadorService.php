@@ -12,7 +12,11 @@ class BuscadorService
             return [];
         }
 
-        $contenidos = Contenido::where('titulo', 'regexp', "/" . preg_quote($nombre, '/') . "/i")
+        $contenidos = Contenido::where(
+            'titulo',
+            'regexp',
+            "/" . preg_quote($nombre, '/') . "/i"
+        )
             ->limit(20)
             ->get();
 

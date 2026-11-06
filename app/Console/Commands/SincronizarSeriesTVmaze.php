@@ -4,7 +4,9 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\Contenido;
+use App\Models\Identificador;
 use App\Services\Catalogo\TVmazeService;
+use App\Services\Catalogo\TMDBService;
 
 class SincronizarSeriesTVmaze extends Command
 {
@@ -15,6 +17,7 @@ class SincronizarSeriesTVmaze extends Command
     public function handle()
     {
         $tvmaze = new TVmazeService();
+        $tmdb = new TMDBService();
 
         $series = Contenido::where('tipo', 'serie')->get();
 
@@ -27,10 +30,36 @@ class SincronizarSeriesTVmaze extends Command
 
             $this->info("Procesando: {$serie->titulo}");
 
-            $tvmazeId = $serie->tvmaze_id;
+            $identificador = Identificador::where('contenido_id', $serie->_id)->first();
+
+            // Identificador primero; el campo anterior de Contenido por compatibilidad
+            $tvmazeId = $identificador->tvmaze_id ?? $serie->tvmaze_id;
 
             if (!$tvmazeId) {
 
+                // 1) Buscar por ID de IMDb (viene de TMDB, no depende del idioma del titulo)
+                $tmdbId = $identificador->tmdb_id
+                    ?? $serie->tmdb_id
+                    ?? ($serie->proveedor_catalogo == 'tmdb' ? $serie->proveedor_id : null);
+
+                if ($tmdbId) {
+                    $externos = $tmdb->obtenerIdsExternos($tmdbId);
+                    $imdbId = $externos['imdb_id'] ?? null;
+
+                    if ($imdbId) {
+                        $encontrada = $tvmaze->buscarPorImdb($imdbId);
+
+                        if ($encontrada && isset($encontrada['id'])) {
+                            $tvmazeId = $encontrada['id'];
+                            $this->line("Encontrada por IMDb ({$imdbId}).");
+                        }
+                    }
+                }
+            }
+
+            if (!$tvmazeId) {
+
+                // 2) Respaldo: buscar por nombre con coincidencia exacta
                 $resultados = $tvmaze->buscarSeries($serie->titulo);
 
                 if (empty($resultados)) {
@@ -61,9 +90,14 @@ class SincronizarSeriesTVmaze extends Command
                 }
 
                 $tvmazeId = $coincidencia['id'];
+            }
 
-                $serie->tvmaze_id = $tvmazeId;
-                $serie->save();
+            // Se registra en Identificador sin tocar los demas identificadores
+            if (($identificador->tvmaze_id ?? null) != $tvmazeId) {
+                Identificador::updateOrCreate(
+                    ['contenido_id' => $serie->_id],
+                    ['tvmaze_id' => (int) $tvmazeId]
+                );
             }
 
             $resultado = $tvmaze->importarTemporadasYEpisodios(
