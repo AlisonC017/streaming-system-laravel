@@ -3,23 +3,63 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use MongoDB\BSON\ObjectId;
 use App\Models\Contenido;
 use App\Models\Identificador;
+use App\Models\Sincronizacion;
 use App\Services\Catalogo\TVmazeService;
 use App\Services\Catalogo\TMDBService;
 
 class SincronizarSeriesTVmaze extends Command
 {
-    protected $signature = 'tvmaze:sincronizar';
+    protected $signature = 'tvmaze:sincronizar {--limite= : Maximo de series a procesar en esta corrida} {--reiniciar : Reinicia el avance y empieza desde la primera serie}';
 
-    protected $description = 'Importa temporadas y episodios de todas las series';
+    protected $description = 'Importa temporadas y episodios de las series, continuando desde la ultima procesada';
 
     public function handle()
     {
         $tvmaze = new TVmazeService();
         $tmdb = new TMDBService();
 
-        $series = Contenido::where('tipo', 'serie')->get();
+        $clave = 'tvmaze_series';
+
+        if ($this->option('reiniciar')) {
+            Sincronizacion::where('_id', $clave)->delete();
+
+            $this->info('Avance de sincronizacion reiniciado.');
+        }
+
+        $sincronizacion = Sincronizacion::firstOrCreate(
+            ['_id' => $clave],
+            [
+                'ultima_pagina' => 0,
+                'total_importados' => 0
+            ]
+        );
+
+        $ultimoId = $sincronizacion->ultimo_contenido_id;
+
+        $consulta = Contenido::where('tipo', 'serie');
+
+        if ($ultimoId && preg_match('/^[a-f0-9]{24}$/i', (string) $ultimoId)) {
+            $consulta->where('_id', '>', new ObjectId((string) $ultimoId));
+            $this->info("Continuando despues de la serie con id {$ultimoId}.");
+        } else {
+            $this->info('Iniciando desde la primera serie.');
+        }
+
+        $consulta->orderBy('_id');
+
+        if ($this->option('limite')) {
+            $consulta->limit((int) $this->option('limite'));
+        }
+
+        $series = $consulta->get();
+
+        if ($series->isEmpty()) {
+            $this->info('No hay series pendientes. Use --reiniciar para procesarlas todas de nuevo.');
+            return Command::SUCCESS;
+        }
 
         $procesadas = 0;
         $omitidas = 0;
@@ -32,12 +72,10 @@ class SincronizarSeriesTVmaze extends Command
 
             $identificador = Identificador::where('contenido_id', $serie->_id)->first();
 
-            // Identificador primero; el campo anterior de Contenido por compatibilidad
             $tvmazeId = $identificador->tvmaze_id ?? $serie->tvmaze_id;
 
             if (!$tvmazeId) {
 
-                // 1) Buscar por ID de IMDb (viene de TMDB, no depende del idioma del titulo)
                 $tmdbId = $identificador->tmdb_id
                     ?? $serie->tmdb_id
                     ?? ($serie->proveedor_catalogo == 'tmdb' ? $serie->proveedor_id : null);
@@ -59,12 +97,12 @@ class SincronizarSeriesTVmaze extends Command
 
             if (!$tvmazeId) {
 
-                // 2) Respaldo: buscar por nombre con coincidencia exacta
                 $resultados = $tvmaze->buscarSeries($serie->titulo);
 
                 if (empty($resultados)) {
                     $this->warn("No encontrada en TVmaze.");
                     $omitidas++;
+                    $this->avanzar($sincronizacion, $serie);
                     continue;
                 }
 
@@ -86,13 +124,13 @@ class SincronizarSeriesTVmaze extends Command
                 if (!$coincidencia) {
                     $this->warn("No se encontro una coincidencia exacta. Se omitio.");
                     $omitidas++;
+                    $this->avanzar($sincronizacion, $serie);
                     continue;
                 }
 
                 $tvmazeId = $coincidencia['id'];
             }
 
-            // Se registra en Identificador sin tocar los demas identificadores
             if (($identificador->tvmaze_id ?? null) != $tvmazeId) {
                 Identificador::updateOrCreate(
                     ['contenido_id' => $serie->_id],
@@ -108,6 +146,7 @@ class SincronizarSeriesTVmaze extends Command
             if (!$resultado) {
                 $this->error("Error importando {$serie->titulo}");
                 $omitidas++;
+                $this->avanzar($sincronizacion, $serie);
                 continue;
             }
 
@@ -117,6 +156,9 @@ class SincronizarSeriesTVmaze extends Command
 
             $serie->tvmaze_actualizado_en = now();
             $serie->save();
+
+            $sincronizacion->total_importados = ($sincronizacion->total_importados ?? 0) + 1;
+            $this->avanzar($sincronizacion, $serie);
 
             $this->info(
                 "Temporadas: {$resultado['temporadas']} | Episodios: {$resultado['episodios']}"
@@ -131,5 +173,12 @@ class SincronizarSeriesTVmaze extends Command
         $this->info("Episodios importados: {$totalEpisodios}");
 
         return Command::SUCCESS;
+    }
+
+    protected function avanzar($sincronizacion, $serie)
+    {
+        $sincronizacion->ultimo_contenido_id = (string) $serie->_id;
+        $sincronizacion->actualizado_en = now();
+        $sincronizacion->save();
     }
 }

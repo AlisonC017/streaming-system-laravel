@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+{{-- Vistas solo de prueba :p --}}
 
 <head>
     <meta charset="UTF-8">

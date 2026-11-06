@@ -50,7 +50,7 @@ return [
     ],
 
     'reproduccion' => [
-        // Proveedores que NO se sincronizan en masa: sus fuentes se piden al reproducir
+        // Proveedores que no se sincronizan en masa, sus fuentes se piden al reproducir
         'bajo_demanda' => ['animedoc'],
         'cache_minutos' => env('REPRODUCCION_CACHE_MINUTOS', 5),
     ],
