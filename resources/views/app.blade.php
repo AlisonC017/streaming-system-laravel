@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,21 +9,22 @@
 </head>
 
 <body>
-<a class="skip-link" href="#main">Skip to content</a>
+  <a class="skip-link" href="#main">Skip to content</a>
 
-<!-- ========================= HEADER ========================= -->
-@include('layouts.header')
+  <!-- ========================= HEADER ========================= -->
+  @include('layouts.header')
 
-<main id="main">
+  <main id="main">
 
-  @yield('contenido')
+    @yield('contenido')
 
-</main>
+  </main>
 
-<!-- ========================= FOOTER ========================= -->
-@include('layouts.footer')
+  <!-- ========================= FOOTER ========================= -->
+  @include('layouts.footer')
 
-<script src="js/vendor/bootstrap.bundle.min.js"></script>
-<script src="js/main.js"></script>
+  <script src="{{ asset('js/vendor/bootstrap.bundle.min.js') }}"></script>
+  <script src="{{ asset('js/main.js') }}"></script>
 </body>
+
 </html>

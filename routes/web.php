@@ -74,6 +74,3 @@ Route::get('/catalogo/buscar', [ContenidoController::class, 'buscar'])
 
 Route::get('/catalogo/{id}', [ContenidoController::class, 'mostrar'])
     ->name('catalogo.mostrar');
-
-// prueba de catalogo
-Route::get('/prueba-catalogo', [ContenidoController::class, 'pruebaCatalogo']);
