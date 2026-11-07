@@ -24,7 +24,8 @@ class ReproductorController extends Controller
 
     public function mostrar($contenidoId)
     {
-        $contenido = Contenido::findOrFail($contenidoId);
+        // Solo contenido con fuentes reproducibles
+        $contenido = Contenido::conFuentes()->findOrFail($contenidoId);
 
         $episodio = null;
         $temporada = null;
@@ -32,25 +33,41 @@ class ReproductorController extends Controller
 
         if ($contenido->tipo != 'pelicula') {
 
-            $temporada = Temporada::where('contenido_id', $contenido->_id)
+            $idsEpisodios = $contenido->idsEpisodiosConFuentes();
+
+            $temporadas = Temporada::where('contenido_id', $contenido->_id)
                 ->orderBy('numero')
-                ->first();
+                ->get();
 
-            if ($temporada) {
+            // Primera temporada que tenga episodios reproducibles
+            foreach ($temporadas as $candidata) {
 
-                $episodios = Episodio::where('temporada_id', $temporada->_id)
-                    ->orderBy('numero')
-                    ->get();
+                $reproducibles = $this->soloReproducibles(
+                    Episodio::where('temporada_id', $candidata->_id)
+                        ->orderBy('numero')
+                        ->get(),
+                    $idsEpisodios
+                );
 
-                $episodio = $episodios->first();
-            } else {
-
-                $episodios = Episodio::where('contenido_id', $contenido->_id)
-                    ->orderBy('numero')
-                    ->get();
-
-                $episodio = $episodios->first();
+                if ($reproducibles->isNotEmpty()) {
+                    $temporada = $candidata;
+                    $episodios = $reproducibles;
+                    break;
+                }
             }
+
+            //episodios sueltos del contenido
+            if (!$temporada) {
+
+                $episodios = $this->soloReproducibles(
+                    Episodio::where('contenido_id', $contenido->_id)
+                        ->orderBy('numero')
+                        ->get(),
+                    $idsEpisodios
+                );
+            }
+
+            $episodio = $episodios->first();
         }
 
         return view('reproductor', compact(
@@ -63,11 +80,18 @@ class ReproductorController extends Controller
 
     public function mostrarEpisodio($contenidoId, $episodioId)
     {
-        $contenido = Contenido::findOrFail($contenidoId);
+        $contenido = Contenido::conFuentes()->findOrFail($contenidoId);
+
+        $idsEpisodios = $contenido->idsEpisodiosConFuentes();
 
         $episodio = Episodio::where('_id', $episodioId)
             ->where('contenido_id', $contenido->_id)
             ->firstOrFail();
+
+        // Un episodio sin fuentes reproducibles no se muestra
+        if (!in_array((string) $episodio->_id, $idsEpisodios)) {
+            abort(404);
+        }
 
         $temporada = null;
 
@@ -75,19 +99,18 @@ class ReproductorController extends Controller
             $temporada = Temporada::find($episodio->temporada_id);
         }
 
-        $episodios = collect();
-
         if ($temporada) {
 
-            $episodios = Episodio::where('temporada_id', $temporada->_id)
-                ->orderBy('numero')
-                ->get();
+            $consulta = Episodio::where('temporada_id', $temporada->_id);
         } else {
 
-            $episodios = Episodio::where('contenido_id', $contenido->_id)
-                ->orderBy('numero')
-                ->get();
+            $consulta = Episodio::where('contenido_id', $contenido->_id);
         }
+
+        $episodios = $this->soloReproducibles(
+            $consulta->orderBy('numero')->get(),
+            $idsEpisodios
+        );
 
         return view('reproductor', compact(
             'contenido',
@@ -125,6 +148,8 @@ class ReproductorController extends Controller
         ]);
     }
 
+    // Administracion: aqui NO se filtra por fuentes, porque se usa
+    // justamente para registrar la primera fuente de un contenido
     public function guardarFuente(Request $request)
     {
         $datos = $request->validate([
@@ -170,5 +195,12 @@ class ReproductorController extends Controller
         return response()->json([
             'mensaje' => 'Fuente eliminada correctamente'
         ]);
+    }
+
+    private function soloReproducibles($episodios, $idsEpisodios)
+    {
+        return $episodios
+            ->filter(fn($episodio) => in_array((string) $episodio->_id, $idsEpisodios))
+            ->values();
     }
 }

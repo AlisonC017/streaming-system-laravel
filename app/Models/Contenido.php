@@ -71,7 +71,7 @@ class Contenido extends Model
             });
     }
 
-    // IDs (texto) de los contenidos que tienen al menos una fuente activa
+    // IDs de los contenidos que tienen al menos una fuente activa
     public static function idsConFuentes()
     {
         return self::fuentesActivas()
@@ -81,7 +81,7 @@ class Contenido extends Model
             ->all();
     }
 
-    // Uso: Contenido::conFuentes()->orderBy('titulo')->get()
+    // es para usa con Contenido::conFuentes()->orderBy('titulo')->get()
     public function scopeConFuentes($query)
     {
         $ids = [];
@@ -96,7 +96,7 @@ class Contenido extends Model
         return $query->whereIn('_id', $ids);
     }
 
-    // IDs (texto) de los episodios de este contenido que tienen fuente activa
+    // IDs de los episodios de este contenido que tienen fuente activa
     public function idsEpisodiosConFuentes()
     {
         return self::fuentesActivas()

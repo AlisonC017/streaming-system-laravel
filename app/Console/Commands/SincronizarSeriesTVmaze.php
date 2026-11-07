@@ -72,10 +72,12 @@ class SincronizarSeriesTVmaze extends Command
 
             $identificador = Identificador::where('contenido_id', $serie->_id)->first();
 
+            // Identificador primero; el campo anterior de Contenido por compatibilidad
             $tvmazeId = $identificador->tvmaze_id ?? $serie->tvmaze_id;
 
             if (!$tvmazeId) {
 
+                // 1) Buscar por ID de IMDb (viene de TMDB, no depende del idioma del titulo)
                 $tmdbId = $identificador->tmdb_id
                     ?? $serie->tmdb_id
                     ?? ($serie->proveedor_catalogo == 'tmdb' ? $serie->proveedor_id : null);
@@ -97,6 +99,7 @@ class SincronizarSeriesTVmaze extends Command
 
             if (!$tvmazeId) {
 
+                // 2) Respaldo: buscar por nombre con coincidencia exacta
                 $resultados = $tvmaze->buscarSeries($serie->titulo);
 
                 if (empty($resultados)) {
@@ -131,6 +134,7 @@ class SincronizarSeriesTVmaze extends Command
                 $tvmazeId = $coincidencia['id'];
             }
 
+            // Se registra en Identificador sin tocar los demas identificadores
             if (($identificador->tvmaze_id ?? null) != $tvmazeId) {
                 Identificador::updateOrCreate(
                     ['contenido_id' => $serie->_id],
@@ -175,6 +179,7 @@ class SincronizarSeriesTVmaze extends Command
         return Command::SUCCESS;
     }
 
+    // Guarda la ultima serie procesada para continuar desde ahi
     protected function avanzar($sincronizacion, $serie)
     {
         $sincronizacion->ultimo_contenido_id = (string) $serie->_id;

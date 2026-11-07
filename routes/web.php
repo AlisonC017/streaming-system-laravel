@@ -5,13 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ControllerProgreso;
 use App\Http\Controllers\ReproductorController;
 use App\Http\Controllers\ContenidoController;
-
-//imports solo para prubas
-
-use Illuminate\Http\Request;
-use App\Models\Contenido;
-use App\Models\Temporada;
-use App\Models\Episodio;
+use Illuminate\Support\Facades\Schedule;
 
 // Inicio
 Route::get('/', function () {
@@ -22,6 +16,8 @@ Route::get('/', function () {
 Route::get('/lol', function () {
     return view('modules.series.show');
 });
+
+//Rutas de reproduccion
 
 Route::get('/reproductor', function () {
     return view('reproductor');
@@ -47,6 +43,7 @@ Route::middleware('solo.local')->group(function () {
         ->name('reproductor.fuentes.eliminar');
 });
 
+//Rutas de progreso de reproduccion
 Route::post('/progreso', [ControllerProgreso::class, 'guardar'])
     ->name('progreso.guardar');
 
@@ -56,8 +53,21 @@ Route::get('/progreso/{contenidoId}', [ControllerProgreso::class, 'obtener'])
 Route::get('/continuar-viendo', [ControllerProgreso::class, 'continuar'])
     ->name('progreso.continuar');
 
-Route::get('/catalogo', [ContenidoController::class, 'catalogo'])
+// rutas de catalogo
+Route::get('/catalogo', [ContenidoController::class, 'obtenerTodos'])
     ->name('catalogo');
+
+Route::get('/catalogo/peliculas', [ContenidoController::class, 'obtenerPeliculas'])
+    ->name('catalogo.peliculas');
+
+Route::get('/catalogo/series', [ContenidoController::class, 'obtenerSeries'])
+    ->name('catalogo.series');
+
+Route::get('/catalogo/anime', [ContenidoController::class, 'obtenerAnime'])
+    ->name('catalogo.anime');
+
+Route::get('/catalogo/genero/{genero}', [ContenidoController::class, 'porGenero'])
+    ->name('catalogo.genero');
 
 Route::get('/catalogo/buscar', [ContenidoController::class, 'buscar'])
     ->name('catalogo.buscar');
@@ -65,77 +75,5 @@ Route::get('/catalogo/buscar', [ContenidoController::class, 'buscar'])
 Route::get('/catalogo/{id}', [ContenidoController::class, 'mostrar'])
     ->name('catalogo.mostrar');
 
-//Este desastre es para probar el catalogo, no es parte del proyecto final, solo es para pruebas
-// Por defecto solo muestra lo que tiene fuentes disponibles. Con ?todos=1 muestra todo.
-
-Route::get('/prueba-catalogo', function (Request $request) {
-
-    $soloDisponibles = !$request->boolean('todos');
-
-    $consulta = Contenido::query();
-
-    if ($soloDisponibles) {
-        $consulta->conFuentes();
-    }
-
-    if ($request->tipo) {
-        $consulta->where('tipo', $request->tipo);
-    }
-
-    $contenidos = $consulta->orderBy('titulo')->get();
-
-    if ($request->q) {
-        $contenidos = $contenidos->filter(function ($contenido) use ($request) {
-            return stripos($contenido->titulo, $request->q) !== false;
-        })->values();
-    }
-
-    $contenidoSeleccionado = null;
-    $temporadas = collect();
-    $episodiosPorTemporada = [];
-
-    if ($request->contenido_id) {
-
-        $contenidoSeleccionado = Contenido::find($request->contenido_id);
-
-        if ($contenidoSeleccionado) {
-
-            $idsEpisodios = $soloDisponibles
-                ? $contenidoSeleccionado->idsEpisodiosConFuentes()
-                : null;
-
-            $todasTemporadas = Temporada::where(
-                'contenido_id',
-                $contenidoSeleccionado->_id
-            )->orderBy('numero')->get();
-
-            foreach ($todasTemporadas as $temporada) {
-
-                $episodios = Episodio::where(
-                    'temporada_id',
-                    $temporada->_id
-                )->orderBy('numero')->get();
-
-                if ($idsEpisodios !== null) {
-                    $episodios = $episodios->filter(
-                        fn($episodio) => in_array((string) $episodio->_id, $idsEpisodios)
-                    )->values();
-
-                    if ($episodios->isEmpty()) {
-                        continue;
-                    }
-                }
-
-                $temporadas->push($temporada);
-                $episodiosPorTemporada[(string) $temporada->_id] = $episodios;
-            }
-        }
-    }
-
-    return view('prueba-catalogo', compact(
-        'contenidos',
-        'contenidoSeleccionado',
-        'temporadas',
-        'episodiosPorTemporada'
-    ));
-});
+// prueba de catalogo
+Route::get('/prueba-catalogo', [ContenidoController::class, 'pruebaCatalogo']);
