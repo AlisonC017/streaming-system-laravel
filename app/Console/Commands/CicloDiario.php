@@ -19,7 +19,12 @@ class CicloDiario extends Command
             ['catalogo:importar', ['fuente' => 'anilist', 'tipo' => 'anime', 'paginas' => 3]],
             ['tvmaze:sincronizar', []],
             ['fuentes:sincronizar', []],
+            ['catalogo:actualizar-emision', []],
         ];
+
+        if (now('America/Costa_Rica')->isSunday()) {
+            $pasos[] = ['fuentes:sincronizar', ['--pendientes' => true]];
+        }
 
         $fallos = 0;
 

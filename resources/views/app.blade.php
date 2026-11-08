@@ -23,8 +23,8 @@
   <!-- ========================= FOOTER ========================= -->
   @include('layouts.footer')
 
-  <script src="{{ asset('js/vendor/bootstrap.bundle.min.js') }}"></script>
-  <script src="{{ asset('js/main.js') }}"></script>
+  <script src="{{ asset('theme/js/vendor/bootstrap.bundle.min.js') }}"></script>
+  <script src="{{ asset('theme/js/main.js') }}"></script>
 </body>
 
 </html>

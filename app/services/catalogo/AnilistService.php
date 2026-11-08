@@ -32,6 +32,11 @@ class AniListService
                         episodes
                         averageScore
                         popularity
+                        startDate {
+                            year
+                            month
+                            day
+                        }
                     }
                 }
             }
@@ -72,6 +77,11 @@ class AniListService
                     episodes
                     averageScore
                     popularity
+                    startDate {
+                        year
+                        month
+                        day
+                    }
                 }
             }
         ';
@@ -127,6 +137,17 @@ class AniListService
             ?? $anime['title']['native']
             ?? 'Anime sin titulo';
 
+        $fechaEstreno = null;
+
+        if (!empty($anime['startDate']['year'])) {
+            $fechaEstreno = sprintf(
+                '%04d-%02d-%02d',
+                $anime['startDate']['year'],
+                $anime['startDate']['month'] ?? 1,
+                $anime['startDate']['day'] ?? 1
+            );
+        }
+
         $datosContenido = [
             'id_mal' => $anime['idMal'] ?? null,
             'titulo' => $titulo,
@@ -136,6 +157,7 @@ class AniListService
             'descripcion' => $anime['description'] ?? null,
             'imagen' => $anime['coverImage']['large'] ?? null,
             'generos' => $anime['genres'] ?? [],
+            'fecha_estreno' => $fechaEstreno,
             'estado' => strtolower($anime['status'] ?? ''),
             'puntuacion' => isset($anime['averageScore'])
                 ? $anime['averageScore']
@@ -168,6 +190,44 @@ class AniListService
             query ($pagina: Int, $cantidad: Int) {
                 Page(page: $pagina, perPage: $cantidad) {
                     media(type: ANIME, sort: POPULARITY_DESC, isAdult: false) {
+                        id
+                    }
+                }
+            }
+        ';
+
+        $respuesta = Http::timeout(15)->post($this->url, [
+            'query' => $consulta,
+            'variables' => [
+                'pagina' => (int) $pagina,
+                'cantidad' => (int) $cantidad
+            ]
+        ]);
+
+        if ($respuesta->successful()) {
+            $datos = $respuesta->json();
+
+            if (isset($datos['errors'])) {
+                throw new \Exception(
+                    'Error de AniList: ' . json_encode($datos['errors'])
+                );
+            }
+
+            return $datos['data']['Page']['media'] ?? [];
+        }
+
+        throw new \Exception(
+            'AniList respondio con HTTP ' . $respuesta->status() . ': ' . $respuesta->body()
+        );
+    }
+
+    // Animes que se estan emitiendo ahora, los mas populares primero
+    public function obtenerEnEmision($pagina = 1, $cantidad = 20)
+    {
+        $consulta = '
+            query ($pagina: Int, $cantidad: Int) {
+                Page(page: $pagina, perPage: $cantidad) {
+                    media(type: ANIME, status: RELEASING, sort: POPULARITY_DESC, isAdult: false) {
                         id
                     }
                 }

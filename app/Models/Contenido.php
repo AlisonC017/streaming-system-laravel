@@ -2,12 +2,17 @@
 
 namespace App\Models;
 
+use Illuminate\Support\Facades\Cache;
 use MongoDB\BSON\ObjectId;
 use MongoDB\Laravel\Eloquent\Model;
 
 
 class Contenido extends Model
 {
+    // Clave y segundos de la cache de contenidos con fuentes
+    private const CACHE_IDS_FUENTES = 'contenidos_ids_con_fuentes';
+    private const CACHE_SEGUNDOS = 300;
+
     protected $connection = 'mongodb';
     protected $collection = 'contenidos';
 
@@ -61,7 +66,6 @@ class Contenido extends Model
         return $this->hasMany(Progreso::class, 'contenido_id', '_id');
     }
 
-    // Fuentes disponibles y no expiradas
     protected static function fuentesActivas()
     {
         return Fuente::where('estado', 'disponible')
@@ -71,17 +75,25 @@ class Contenido extends Model
             });
     }
 
-    // IDs de los contenidos que tienen al menos una fuente activa
+    // id de los contenidos que tienen al menos una fuente activa.
+    // Se guarda en cache unos minutos para no consultar todas las fuentes cada que vuelve a catalogo
     public static function idsConFuentes()
     {
-        return self::fuentesActivas()
-            ->pluck('contenido_id')
-            ->unique()
-            ->values()
-            ->all();
+        return Cache::remember(self::CACHE_IDS_FUENTES, self::CACHE_SEGUNDOS, function () {
+            return self::fuentesActivas()
+                ->pluck('contenido_id')
+                ->unique()
+                ->values()
+                ->all();
+        });
     }
 
-    // es para usa con Contenido::conFuentes()->orderBy('titulo')->get()
+    // Borra la cache para que el catalogo refleje cambios de inmediato
+    public static function olvidarCacheFuentes()
+    {
+        Cache::forget(self::CACHE_IDS_FUENTES);
+    }
+
     public function scopeConFuentes($query)
     {
         $ids = [];
@@ -96,16 +108,11 @@ class Contenido extends Model
         return $query->whereIn('_id', $ids);
     }
 
-    // IDs de los episodios de este contenido que tienen fuente activa
+    // id de los episodios de este contenido que tienen fuente activa
     public function idsEpisodiosConFuentes()
     {
-        return self::fuentesActivas()
-            ->where('contenido_id', (string) $this->_id)
-            ->pluck('episodio_id')
-            ->filter()
-            ->map(fn($id) => (string) $id)
-            ->unique()
-            ->values()
-            ->all();
+        return self::fuentesActivas()->where('contenido_id', (string) $this->_id)
+            ->pluck('episodio_id')->filter()->map(fn($id) => (string) $id)
+            ->unique()->values()->all();
     }
 }

@@ -7,11 +7,12 @@ use MongoDB\Laravel\Eloquent\Model;
 class Identificador extends Model
 {
     protected $connection = 'mongodb';
-    protected $collection = 'identificadores';
+    protected $table = 'identificadores';
 
     protected $fillable = [
         'contenido_id',
         'tmdb_id',
+        'tmdb_temporada',
         'anilist_id',
         'mal_id',
         'tvmaze_id',
@@ -21,6 +22,7 @@ class Identificador extends Model
 
     protected $casts = [
         'tmdb_id' => 'integer',
+        'tmdb_temporada' => 'integer',
         'anilist_id' => 'integer',
         'mal_id' => 'integer',
         'tvmaze_id' => 'integer'

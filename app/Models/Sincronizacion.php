@@ -7,7 +7,7 @@ use MongoDB\Laravel\Eloquent\Model;
 class Sincronizacion extends Model
 {
     protected $connection = 'mongodb';
-    protected $collection = 'sincronizaciones_catalogo';
+    protected $table = 'sincronizaciones';
 
     protected $fillable = [
         '_id',
