@@ -24,8 +24,8 @@ class ReproductorController extends Controller
 
     public function mostrar($contenidoId)
     {
-        // Solo contenido con fuentes reproducibles
-        $contenido = Contenido::conFuentes()->findOrFail($contenidoId);
+        // 1. Cargar el contenido directamente (permitiendo bajo demanda)
+        $contenido = Contenido::findOrFail($contenidoId);
 
         $episodio = null;
         $temporada = null;
@@ -39,15 +39,17 @@ class ReproductorController extends Controller
                 ->orderBy('numero')
                 ->get();
 
-            // Primera temporada que tenga episodios reproducibles
+            // Buscar la primera temporada que tenga episodios
             foreach ($temporadas as $candidata) {
 
-                $reproducibles = $this->soloReproducibles(
-                    Episodio::where('temporada_id', $candidata->_id)
-                        ->orderBy('numero')
-                        ->get(),
-                    $idsEpisodios
-                );
+                $listaEpisodios = Episodio::where('temporada_id', $candidata->_id)
+                    ->orderBy('numero')
+                    ->get();
+
+                // Si hay fuentes guardadas filtramos, de lo contrario permitimos los episodios para que operen bajo demanda
+                $reproducibles = !empty($idsEpisodios)
+                    ? $this->soloReproducibles($listaEpisodios, $idsEpisodios)
+                    : $listaEpisodios;
 
                 if ($reproducibles->isNotEmpty()) {
                     $temporada = $candidata;
@@ -56,15 +58,15 @@ class ReproductorController extends Controller
                 }
             }
 
-            //episodios sueltos del contenido
+            // Episodios sueltos del contenido
             if (!$temporada) {
+                $listaEpisodios = Episodio::where('contenido_id', $contenido->_id)
+                    ->orderBy('numero')
+                    ->get();
 
-                $episodios = $this->soloReproducibles(
-                    Episodio::where('contenido_id', $contenido->_id)
-                        ->orderBy('numero')
-                        ->get(),
-                    $idsEpisodios
-                );
+                $episodios = !empty($idsEpisodios)
+                    ? $this->soloReproducibles($listaEpisodios, $idsEpisodios)
+                    : $listaEpisodios;
             }
 
             $episodio = $episodios->first();
@@ -80,18 +82,11 @@ class ReproductorController extends Controller
 
     public function mostrarEpisodio($contenidoId, $episodioId)
     {
-        $contenido = Contenido::conFuentes()->findOrFail($contenidoId);
-
-        $idsEpisodios = $contenido->idsEpisodiosConFuentes();
+        $contenido = Contenido::findOrFail($contenidoId);
 
         $episodio = Episodio::where('_id', $episodioId)
             ->where('contenido_id', $contenido->_id)
             ->firstOrFail();
-
-        // Un episodio sin fuentes reproducibles no se muestra
-        if (!in_array((string) $episodio->_id, $idsEpisodios)) {
-            abort(404);
-        }
 
         $temporada = null;
 
@@ -100,17 +95,18 @@ class ReproductorController extends Controller
         }
 
         if ($temporada) {
-
             $consulta = Episodio::where('temporada_id', $temporada->_id);
         } else {
-
             $consulta = Episodio::where('contenido_id', $contenido->_id);
         }
 
-        $episodios = $this->soloReproducibles(
-            $consulta->orderBy('numero')->get(),
-            $idsEpisodios
-        );
+        $idsEpisodios = $contenido->idsEpisodiosConFuentes();
+        $listaEpisodios = $consulta->orderBy('numero')->get();
+
+        // Si no hay fuentes pre-guardadas en BD, permitimos la lista para resolver vía bajo demanda
+        $episodios = !empty($idsEpisodios)
+            ? $this->soloReproducibles($listaEpisodios, $idsEpisodios)
+            : $listaEpisodios;
 
         return view('reproductor', compact(
             'contenido',
@@ -132,12 +128,12 @@ class ReproductorController extends Controller
         $episodio = null;
 
         if (!empty($datos['episodio_id'])) {
-
             $episodio = Episodio::where('_id', $datos['episodio_id'])
                 ->where('contenido_id', $contenido->_id)
                 ->firstOrFail();
         }
 
+        // Aquí se invoca el script Python de vidsrc_direct
         $fuentes = $this->reproduccion->obtenerFuentesReproduccion(
             $contenido,
             $episodio
@@ -148,8 +144,6 @@ class ReproductorController extends Controller
         ]);
     }
 
-    // Administracion: aqui NO se filtra por fuentes, porque se usa
-    // justamente para registrar la primera fuente de un contenido
     public function guardarFuente(Request $request)
     {
         $datos = $request->validate([
@@ -166,7 +160,6 @@ class ReproductorController extends Controller
         $contenido = Contenido::findOrFail($datos['contenido_id']);
 
         if (!empty($datos['episodio_id'])) {
-
             Episodio::where('_id', $datos['episodio_id'])
                 ->where('contenido_id', $contenido->_id)
                 ->firstOrFail();

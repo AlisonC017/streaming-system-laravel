@@ -40,21 +40,54 @@ class ProveedorReproduccionService
         return $total;
     }
 
+    public function sincronizarEpisodiosNuevos(Contenido $contenido)
+    {
+        $total = 0;
+
+        $episodios = Episodio::where('contenido_id', $contenido->_id)->get();
+
+        foreach ($episodios as $episodio) {
+            $guardadas = $this->fuenteManager
+                ->obtenerFuentes($contenido->_id, $episodio->_id)
+                ->toArray();
+
+            if (count($guardadas) > 0) {
+                continue;
+            }
+
+            $total += $this->sincronizarFuentes($contenido, $episodio);
+        }
+
+        return $total;
+    }
+
     public function obtenerFuentesReproduccion(Contenido $contenido, ?Episodio $episodio = null)
     {
-        $guardadas = $this->fuenteManager
-            ->obtenerFuentes($contenido->_id, $episodio ? $episodio->_id : null)
-            ->toArray();
+        $desarrollo = (bool) config('services.reproduccion.probar_en_desarrollo', false);
+
+        $guardadas = [];
+
+        if ($desarrollo) {
+            $guardadas = $this->fuenteManager
+                ->obtenerFuentes($contenido->_id, $episodio ? $episodio->_id : null)
+                ->toArray();
+        }
 
         $bajoDemanda = [];
 
         foreach ($this->proveedores as $proveedor) {
-            if ($this->esBajoDemanda($proveedor)) {
-                $bajoDemanda = array_merge(
-                    $bajoDemanda,
-                    $this->resolverBajoDemanda($proveedor, $contenido, $episodio)
-                );
+            if (!$this->esBajoDemanda($proveedor)) {
+                continue;
             }
+
+            if (!$desarrollo && $proveedor->obtenerNombre() !== 'youtube') {
+                continue;
+            }
+
+            $bajoDemanda = array_merge(
+                $bajoDemanda,
+                $this->resolverBajoDemanda($proveedor, $contenido, $episodio)
+            );
         }
 
         return array_merge($guardadas, $bajoDemanda);

@@ -51,8 +51,12 @@ return [
 
     'reproduccion' => [
         // Proveedores que no se sincronizan en masa, sus fuentes se piden al reproducir
-        'bajo_demanda' => ['animedoc'],
+        'bajo_demanda' => ['animedoc', 'youtube'],
         'cache_minutos' => env('REPRODUCCION_CACHE_MINUTOS', 5),
+
+        // false = forma oficial (solo trailers de YouTube)
+        // true = modo desarrollo (VidSrc guardado + AnimeDoc)
+        'probar_en_desarrollo' => env('REPRODUCCION_PROBAR_DESARROLLO', false),
     ],
 
 ];
