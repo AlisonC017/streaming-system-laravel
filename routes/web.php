@@ -5,12 +5,11 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ControllerProgreso;
 use App\Http\Controllers\ReproductorController;
 use App\Http\Controllers\ContenidoController;
-use Illuminate\Support\Facades\Schedule;
+
 
 // Inicio
-Route::get('/', function () {
-    return view('modules.index');
-});
+Route::get('/', [ContenidoController::class, 'obtenerTodos'])
+    ->name('inicio');
 
 // Prueba
 Route::get('/lol', function () {
