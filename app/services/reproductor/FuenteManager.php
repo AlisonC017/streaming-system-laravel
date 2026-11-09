@@ -24,7 +24,6 @@ class FuenteManager
 
         $fuente = $consulta->first();
 
-        // Compatibilidad: fuente antigua sin huella con la misma URL
         if (!$fuente && !empty($datos['huella'])) {
             $fuente = Fuente::where('contenido_id', $datos['contenido_id'])
                 ->where('episodio_id', $episodioId)
