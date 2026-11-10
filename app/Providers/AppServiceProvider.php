@@ -2,20 +2,24 @@
 
 namespace App\Providers;
 
-use App\Services\Reproductor\Proveedores\YouTubeProvider;
 use Illuminate\Support\ServiceProvider;
-use App\Services\Reproductor\Proveedores\ProveedorInterface;
 use App\Services\Reproductor\Proveedores\VidSrcProvider;
-use App\Services\Reproductor\Proveedores\AnimeDocProvider;
 use App\Services\Reproductor\ProveedorReproduccionService;
 use App\Services\Reproductor\Proveedores\YouTubeProveedor;
+use App\Services\Reproductor\Proveedores\SuperEmbedProvider;
+use App\Services\Reproductor\Proveedores\CineSrcProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
         $this->app->tag(
-            [VidSrcProvider::class, AnimeDocProvider::class, YouTubeProveedor::class],
+            [
+                VidSrcProvider::class,
+                YouTubeProveedor::class,
+                SuperEmbedProvider::class,
+                CineSrcProvider::class
+            ],
             'proveedores.reproduccion'
         );
 

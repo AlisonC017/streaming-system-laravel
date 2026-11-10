@@ -10,12 +10,55 @@ use Illuminate\Support\Facades\Log;
 class ProveedorReproduccionService
 {
     protected $fuenteManager;
+    protected $verificador;
     protected $proveedores;
 
-    public function __construct(FuenteManager $fuenteManager, iterable $proveedores)
-    {
+    public function __construct(
+        FuenteManager $fuenteManager,
+        VerificadorFuente $verificador,
+        iterable $proveedores
+    ) {
         $this->fuenteManager = $fuenteManager;
+        $this->verificador = $verificador;
         $this->proveedores = $proveedores;
+    }
+
+    public function sincronizarContenido(Contenido $contenido)
+    {
+        if ($contenido->tipo == 'pelicula') {
+            return $this->sincronizarFuentes($contenido, null);
+        }
+
+        $total = 0;
+
+        $episodios = Episodio::where('contenido_id', $contenido->_id)->get();
+
+        foreach ($episodios as $episodio) {
+            $total += $this->sincronizarFuentes($contenido, $episodio);
+        }
+
+        return $total;
+    }
+
+    public function sincronizarEpisodiosNuevos(Contenido $contenido)
+    {
+        $total = 0;
+
+        $episodios = Episodio::where('contenido_id', $contenido->_id)->get();
+
+        foreach ($episodios as $episodio) {
+            $guardadas = $this->fuenteManager
+                ->obtenerFuentes($contenido->_id, $episodio->_id)
+                ->toArray();
+
+            if (count($guardadas) > 0) {
+                continue;
+            }
+
+            $total += $this->sincronizarFuentes($contenido, $episodio);
+        }
+
+        return $total;
     }
 
     // Si el titulo tiene video propio (subido por el admin) se usa ese.
@@ -44,6 +87,38 @@ class ProveedorReproduccionService
         }
 
         return $bajoDemanda;
+    }
+
+    protected function sincronizarFuentes(Contenido $contenido, ?Episodio $episodio)
+    {
+        $total = 0;
+
+        foreach ($this->proveedores as $proveedor) {
+
+            if ($this->esBajoDemanda($proveedor)) {
+                continue;
+            }
+
+            try {
+                $fuentes = $proveedor->obtenerFuentes($contenido, $episodio);
+            } catch (\Throwable $e) {
+                Log::warning('Proveedor de reproduccion fallo', [
+                    'proveedor' => $proveedor->obtenerNombre(),
+                    'mensaje' => $e->getMessage()
+                ]);
+                continue;
+            }
+
+            foreach ($fuentes as $datos) {
+                $fuente = $this->fuenteManager->guardarFuente($datos);
+
+                $this->verificador->verificar($fuente->_id);
+
+                $total++;
+            }
+        }
+
+        return $total;
     }
 
     protected function esBajoDemanda($proveedor)
