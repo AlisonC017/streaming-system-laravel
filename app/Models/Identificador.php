@@ -15,9 +15,7 @@ class Identificador extends Model
         'tmdb_temporada',
         'anilist_id',
         'mal_id',
-        'tvmaze_id',
-        'animedoc_subject_id',
-        'animedoc_detail_path'
+        'tvmaze_id'
     ];
 
     protected $casts = [

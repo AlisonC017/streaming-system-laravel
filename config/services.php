@@ -43,19 +43,13 @@ return [
         'key' => env('TMDB_API_KEY'),
     ],
 
-    'animedoc' => [
-        'key' => env('ANIMEDOC_API_KEY'),
-        'url' => env('ANIMEDOC_URL', 'https://api.animedoc.cloud/api/v2/anime'),
-        'ttl_minutos' => env('ANIMEDOC_TTL_MINUTOS', 30),
-    ],
-
     'reproduccion' => [
         // Proveedores que no se sincronizan en masa, sus fuentes se piden al reproducir
-        'bajo_demanda' => ['animedoc', 'youtube'],
+        'bajo_demanda' => ['youtube'],
         'cache_minutos' => env('REPRODUCCION_CACHE_MINUTOS', 5),
 
         // false = forma oficial (solo trailers de YouTube)
-        // true = modo desarrollo (VidSrc guardado + AnimeDoc)
+        // true = modo desarrollo (VidSrc, superembed, cinesrc)
         'probar_en_desarrollo' => env('REPRODUCCION_PROBAR_DESARROLLO', false),
     ],
 
