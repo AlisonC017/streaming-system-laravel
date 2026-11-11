@@ -12,3 +12,6 @@
 
   <link rel="stylesheet" href="{{ asset('theme/css/vendor/bootstrap.min.css') }}">
   <link rel="stylesheet" href="{{ asset('theme/css/style.css') }}">
+
+  {{-- extra.css: tema lila y negro --}}
+  <link rel="stylesheet" href="{{ asset('theme/css/extra.css') }}">
