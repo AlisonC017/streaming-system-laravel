@@ -1,30 +1,25 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="es">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Streamline — Streaming Service</title>
-  @include('layouts.css')
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>@yield('titulo', 'Stream Line')</title>@include('layouts.css')
 </head>
 
 <body>
-  <a class="skip-link" href="#main">Skip to content</a>
+    @includeIf('partials.icons')
+    @include('layouts.header')
 
-  <!-- ========================= HEADER ========================= -->
-  @include('layouts.header')
+    <main>
+        @yield('contenido')
+    </main>
 
-  <main id="main">
+    @include('layouts.footer')
 
-    @yield('contenido')
-
-  </main>
-
-  <!-- ========================= FOOTER ========================= -->
-  @include('layouts.footer')
-
-  <script src="{{ asset('theme/js/vendor/bootstrap.bundle.min.js') }}"></script>
-  <script src="{{ asset('theme/js/main.js') }}"></script>
+    <script src="{{ asset('theme/js/vendor/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ asset('theme/js/main.js') }}"></script>
+    @stack('scripts')
 </body>
 
 </html>

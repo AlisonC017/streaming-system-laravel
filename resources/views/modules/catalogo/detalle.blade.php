@@ -1,77 +1,82 @@
-{{-- Vista base del detalle: Jime la reemplaza con el diseño final.
-Variables que recibe: $contenido, $temporadas y $episodiosPorTemporada
-(solo traen temporadas y episodios con fuentes reproducibles) --}}
+{{-- Detalle. Recibe: $contenido, $temporadas y $episodiosPorTemporada
+     (solo temporadas y episodios con fuentes reproducibles) --}}
 @extends('app')
+@section('titulo', ($contenido->titulo ?? 'Detalle') . ' · Stream Line')
 
 @section('contenido')
 
-    <section class="section" aria-labelledby="titulo-contenido">
-        <div class="wrap">
+    @php($generos = is_array($contenido->generos ?? null) ? $contenido->generos : [])
 
-            <p><a href="{{ route('catalogo') }}">← Volver al catálogo</a></p>
+    <section class="detail-hero" aria-labelledby="titulo-contenido">
+        @if ($contenido->imagen)
+            <div class="detail-backdrop" style="background-image:url('{{ $contenido->imagen }}')"></div>
+        @endif
+        <div class="detail-shade"></div>
 
-            <div class="row g-4">
-
-                @if($contenido->imagen)
-                    <div class="col-12 col-md-3">
-                        <img src="{{ $contenido->imagen }}" alt="Póster de {{ $contenido->titulo }}" class="img-fluid rounded">
-                    </div>
+        <div class="wrap detail-layout">
+            <div class="detail-poster">
+                @if ($contenido->imagen)
+                    <img src="{{ $contenido->imagen }}" alt="Póster de {{ $contenido->titulo }}">
+                @else
+                    <div class="poster-placeholder">{{ $contenido->titulo }}</div>
                 @endif
-
-                <div class="col">
-                    <h1 id="titulo-contenido">{{ $contenido->titulo }}</h1>
-
-                    <p>
-                        <span class="chip">{{ $contenido->tipo }}</span>
-
-                        @if(is_array($contenido->generos))
-                            @foreach($contenido->generos as $genero)
-                                <a class="chip" href="{{ route('catalogo.genero', $genero) }}">{{ $genero }}</a>
-                            @endforeach
-                        @endif
-
-                        @if($contenido->puntuacion)
-                            <span class="chip chip--gold">{{ $contenido->puntuacion }}</span>
-                        @endif
-                    </p>
-
-                    <p>{{ $contenido->descripcion }}</p>
-
-                    @if($contenido->tipo == 'pelicula')
-
-                        <a class="btn-cta btn-primary" href="{{ route('reproductor.mostrar', $contenido->_id) }}">
-                            Reproducir
-                        </a>
-
-                    @endif
-                </div>
             </div>
 
-            @if($contenido->tipo != 'pelicula')
+            <div class="detail-copy">
+                <a class="back-link" href="{{ route('catalogo') }}">← Volver al catálogo</a>
+                <h1 id="titulo-contenido">{{ $contenido->titulo }}</h1>
 
-                <h2 class="mt-5">Temporadas y episodios</h2>
+                <div class="detail-meta">
+                    <span class="chip">{{ ucfirst($contenido->tipo ?? 'Contenido') }}</span>
+                    @if ($contenido->puntuacion)
+                        <span class="chip chip--gold">★ {{ $contenido->puntuacion }}</span>
+                    @endif
+                    @foreach ($generos as $genero)
+                        <a class="chip" href="{{ route('catalogo.genero', $genero) }}">{{ $genero }}</a>
+                    @endforeach
+                </div>
 
-                @foreach($temporadas as $temporada)
+                <p class="detail-description">{{ $contenido->descripcion }}</p>
 
-                    <h3 class="h5 mt-4">Temporada {{ $temporada->numero }}</h3>
+                @if (($contenido->tipo ?? '') === 'pelicula')
+                    <a class="btn btn-primary btn-lg" href="{{ route('reproductor.mostrar', $contenido->_id) }}">
+                        ▶ Reproducir ahora
+                    </a>
+                @else
+                    <a class="btn btn-primary btn-lg" href="#episodios">Ver episodios</a>
+                @endif
+            </div>
+        </div>
+    </section>
 
-                    <ul class="list-unstyled">
-                        @foreach($episodiosPorTemporada[(string) $temporada->_id] as $episodio)
-                            <li class="mb-2">
-                                Episodio {{ $episodio->numero }}: {{ $episodio->titulo }}
-                                <a class="btn-cta btn-ghost ms-2"
+    @if (($contenido->tipo ?? '') !== 'pelicula')
+        <section class="wrap episode-section" id="episodios">
+            <h2>Temporadas y episodios</h2>
+
+            @forelse ($temporadas as $temporada)
+                <div class="season-block">
+                    <h3>Temporada {{ $temporada->numero }}</h3>
+
+                    <div class="episode-grid">
+                        @foreach ($episodiosPorTemporada[(string) $temporada->_id] ?? [] as $episodio)
+                            <article class="episode-card">
+                                <strong class="episode-number">{{ $episodio->numero }}</strong>
+                                <div class="episode-copy">
+                                    <h4>{{ $episodio->titulo }}</h4>
+                                    <p>Episodio {{ $episodio->numero }}</p>
+                                </div>
+                                <a class="btn btn-ghost btn-sm"
                                     href="{{ route('reproductor.episodio', ['contenidoId' => $contenido->_id, 'episodioId' => $episodio->_id]) }}">
                                     Reproducir
                                 </a>
-                            </li>
+                            </article>
                         @endforeach
-                    </ul>
-
-                @endforeach
-
-            @endif
-
-        </div>
-    </section>
+                    </div>
+                </div>
+            @empty
+                <p class="empty-state">No hay episodios reproducibles.</p>
+            @endforelse
+        </section>
+    @endif
 
 @endsection
