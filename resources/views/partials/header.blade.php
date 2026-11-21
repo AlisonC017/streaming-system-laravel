@@ -17,9 +17,41 @@
     </nav>
 
     <div class="header-actions">
-      <form class="header-search" action="{{ route('catalogo.buscar') }}" method="GET" role="search">
-        <input type="search" name="nombre" placeholder="Buscar" aria-label="Buscar títulos" value="{{ request('nombre') }}">
-      </form>
+      <form @class(['search-big', 'is-collapsible', 'is-open' => request()->filled('nombre')])
+      action="{{ route('catalogo.buscar') }}" method="GET" role="search">
+    <button class="search-big__toggle" type="button" aria-label="Buscar" aria-expanded="{{ request()->filled('nombre') ? 'true' : 'false' }}">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    </button>
+    <div class="search-big__fields">
+        <input name="nombre" value="{{ request('nombre') }}" placeholder="Buscar por título..." aria-label="Buscar por título">
+        <select name="tipo" aria-label="Tipo">
+            <option value="">Todos</option>
+            <option value="pelicula" @selected(request('tipo') === 'pelicula')>Películas</option>
+            <option value="serie" @selected(request('tipo') === 'serie')>Series</option>
+            <option value="anime" @selected(request('tipo') === 'anime')>Anime</option>
+        </select>
+        <button class="btn btn-primary">Buscar</button>
+    </div>
+</form>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.querySelector('.search-big.is-collapsible');
+    if (!form) return;
+    const toggle = form.querySelector('.search-big__toggle');
+    const input  = form.querySelector('input[name="nombre"]');
+
+    const abrir  = () => { form.classList.add('is-open'); toggle.setAttribute('aria-expanded', 'true'); setTimeout(() => input.focus(), 150); };
+    const cerrar = () => { form.classList.remove('is-open'); toggle.setAttribute('aria-expanded', 'false'); };
+
+    toggle.addEventListener('click', () => form.classList.contains('is-open') ? cerrar() : abrir());
+    document.addEventListener('click', e => { if (!form.contains(e.target) && !input.value.trim()) cerrar(); });
+    input.addEventListener('keydown', e => { if (e.key === 'Escape' && !input.value.trim()) cerrar(); });
+});
+</script>
+@endpush
+
 
       @auth
         <span class="header-signin">{{ Auth::user()->nombre ?? Auth::user()->name ?? 'Mi cuenta' }}</span>
