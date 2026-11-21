@@ -12,10 +12,25 @@ class ContenidoController extends Controller
     // Cantidad de contenidos por pagina en los listados
     private const POR_PAGINA = 24;
 
-    public function obtenerTodos()
+    // Cantidad de contenidos en la lista de destacados del inicio
+    private const POR_FILA_INICIO = 10;
+
+    // Puntuacion minima para destacar. TMDB guarda vote_average (0 a 10)
+    // y AniList averageScore (0 a 100)
+    private const PUNTUACION_MINIMA = [
+        'pelicula' => 6,
+        'serie' => 6,
+        'anime' => 60,
+    ];
+
+    public function obtenerTodos(Request $request)
     {
         $contenidos = Contenido::conFuentes()->orderBy('titulo')->paginate(self::POR_PAGINA)->withQueryString();
-        return view('modules.catalogo.index', compact('contenidos'));
+
+        // Las filas del inicio solo se calculan en la primera pagina (igual que $esInicio en la vista)
+        $datosInicio = (int) $request->input('page', 1) === 1 ? $this->datosInicio() : [];
+
+        return view('modules.catalogo.index', array_merge(compact('contenidos'), $datosInicio));
     }
 
     public function obtenerPeliculas()
@@ -117,5 +132,34 @@ class ContenidoController extends Controller
         $nativo = '^' . preg_quote($genero, '/') . '$';
         $texto = '"' . preg_quote(substr($escapado, 1, -1), '/') . '"';
         $consulta->where('generos', 'regexp', '/(' . $nativo . ')|(' . $texto . ')/i');
+    }
+
+    // Datos de la portada
+    private function datosInicio()
+    {
+        $peliculas = $this->destacadosPorTipo('pelicula', self::POR_FILA_INICIO);
+        $series = $this->destacadosPorTipo('serie', self::POR_FILA_INICIO);
+        $anime = $this->destacadosPorTipo('anime', self::POR_FILA_INICIO);
+
+        // La popularidad de TMDB y AniList no es comparable, por eso se eligio por tipo
+        // y la mezcla se ordena con la puntuacion pasada a escala 0-10
+        $masDestacados = $peliculas->concat($series)->concat($anime)
+            ->sortByDesc(fn($c) => $c->tipo === 'anime' ? $c->puntuacion / 10 : $c->puntuacion)
+            ->take(self::POR_FILA_INICIO)
+            ->values();
+
+        $destacado = $masDestacados->first(fn($c) => $c->imagen && $c->descripcion);
+        return compact('destacado', 'peliculas', 'series', 'anime', 'masDestacados');
+    }
+
+    // Los mas populares de un tipo que tengan fuentes y una puntuacion minima
+    private function destacadosPorTipo($tipo, $limite)
+    {
+        return Contenido::conFuentes()
+            ->where('tipo', $tipo)
+            ->where('puntuacion', '>=', self::PUNTUACION_MINIMA[$tipo])
+            ->orderBy('popularidad', 'desc')
+            ->limit($limite)
+            ->get();
     }
 }
