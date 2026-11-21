@@ -9,7 +9,8 @@
                 for="password">Contraseña</label><button type="button" class="toggle"
                 data-toggle-pass="password">◉</button></div><button
             class="btn btn-primary btn-lg btn-block">Ingresar</button>
+
+        <button type="button" class="btn btn-google btn-lg btn-block">Continuar con Google</button>
     </form>
     <p class="auth-alt">¿No tienes cuenta? <a href="{{ route('register') }}">Regístrate</a></p>
-    <p class="auth-note">Demostración visual; aún no valida usuarios.</p>
 </div>@endsection

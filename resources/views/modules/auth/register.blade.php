@@ -10,7 +10,8 @@
         <div class="field"><input type="password" name="password" id="password" placeholder=" " required><label
                 for="password">Contraseña</label></div><button class="btn btn-primary btn-lg btn-block">Crear
             cuenta</button>
+
+        <button type="button" class="btn btn-google btn-lg btn-block">Continuar con Google</button>
     </form>
     <p class="auth-alt">¿Ya tienes cuenta? <a href="{{ route('login') }}">Inicia sesión</a></p>
-    <p class="auth-note">Demostración visual; aún no registra usuarios.</p>
 </div>@endsection

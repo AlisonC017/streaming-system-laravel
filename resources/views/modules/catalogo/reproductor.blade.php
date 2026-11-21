@@ -1,7 +1,7 @@
 {{-- Reproductor. Recibe (opcional): $contenido, $episodio, $temporada, $episodios.
      La logica del script (fuentes, progreso, endpoints) es de Albert y no cambia:
      solo se cambio como se dibujan las fuentes y los avisos. --}}
-@extends('app')
+@extends('layouts.app')
 @section('titulo', (isset($contenido) ? $contenido->titulo . ' · ' : '') . 'Reproductor · Stream Line')
 
 @section('contenido')
@@ -61,37 +61,50 @@
                 <div id="fuentes" class="src-list"><p class="muted">Sin consultar.</p></div>
             </div>
 
-            <div class="panel">
-                <div class="panel-head"><h2>Progreso</h2></div>
-                <div class="progreso-datos">
-                    <div><span>Segundo actual</span><b><span id="segundo">0</span> s</b></div>
-                    <div class="der"><span>Porcentaje</span><b><span id="porcentaje">0</span>%</b></div>
-                </div>
-                <div class="progreso-barra"><i id="barra"></i></div>
-                <button class="btn btn-ghost btn-block" type="button" onclick="guardarProgreso()">Guardar progreso</button>
-                @guest
-                    <p class="nota-sesion">Para que tu avance quede guardado, <a href="{{ route('login') }}">inicia sesión</a>.</p>
-                @endguest
-            </div>
-
             @if (isset($contenido) && isset($episodios) && $episodios->count() > 1)
+                @php
+                    $limite = 6;
+                    $listaEp = $episodios->values();
+                    $posActivo = $episodio
+                        ? $listaEp->search(fn ($e) => (string) $e->_id === (string) $episodio->_id)
+                        : false;
+                    // Si el episodio actual queda fuera de los primeros, el panel arranca desplegado
+                    $abierto = $posActivo !== false && $posActivo >= $limite;
+                    $extra = $listaEp->count() - $limite;
+                @endphp
+
                 <div class="panel">
                     <div class="panel-head"><h2>Episodios{{ $temporada ? ' · Temp. ' . $temporada->numero : '' }}</h2></div>
-                    <div class="up-next">
-                        @foreach ($episodios as $ep)
+                    <div class="up-next" id="lista-episodios">
+                        @foreach ($listaEp as $i => $ep)
                             <a class="up {{ $episodio && (string) $ep->_id === (string) $episodio->_id ? 'on' : '' }}"
+                                @if ($i >= $limite) data-extra @if (! $abierto) hidden @endif @endif
                                 href="{{ route('reproductor.episodio', ['contenidoId' => $contenido->_id, 'episodioId' => $ep->_id]) }}">
                                 <strong class="episode-number">{{ $ep->numero }}</strong>
                                 <div><h3>{{ $ep->titulo }}</h3></div>
                             </a>
                         @endforeach
                     </div>
+
+                    @if ($extra > 0)
+                        <button type="button" class="btn btn-ghost btn-sm episode-toggle"
+                            data-mas="Mostrar más ({{ $extra }})"
+                            data-menos="Mostrar menos"
+                            aria-expanded="{{ $abierto ? 'true' : 'false' }}">
+                            {{ $abierto ? 'Mostrar menos' : 'Mostrar más (' . $extra . ')' }}
+                        </button>
+                    @endif
                 </div>
             @endif
         </aside>
 
     </div>
 </div>
+
+<style>
+    .up[hidden] { display: none; }
+    .episode-toggle { display: block; width: 100%; margin-top: 12px; }
+</style>
 
 <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
 
@@ -375,6 +388,24 @@
         new MutationObserver(() => {
             barra.style.width = Math.min(100, parseFloat(pct.textContent) || 0) + '%';
         }).observe(pct, { childList: true, characterData: true, subtree: true });
+    })();
+
+    // ---------- Solo presentacion: lista de episodios desplegable ----------
+    (function () {
+        const boton = document.querySelector('.episode-toggle');
+        const lista = document.getElementById('lista-episodios');
+        if (!boton || !lista) return;
+
+        boton.addEventListener('click', function () {
+            const abierto = boton.getAttribute('aria-expanded') === 'true';
+
+            lista.querySelectorAll('[data-extra]').forEach(function (item) {
+                item.hidden = abierto;
+            });
+
+            boton.setAttribute('aria-expanded', abierto ? 'false' : 'true');
+            boton.textContent = abierto ? boton.dataset.mas : boton.dataset.menos;
+        });
     })();
 
 </script>

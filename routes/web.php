@@ -7,34 +7,11 @@ use App\Http\Controllers\ReproductorController;
 use App\Http\Controllers\ContenidoController;
 
 
-// Inicio
-//Route::get('/', [ContenidoController::class, 'obtenerTodos'])->name('inicio');
-// Solo para ver el diseño de la portada (borrar después)
-Route::get('/vista-inicio', function () {
-    $falso = fn ($i, $tipo, $generos) => (object) [
-        '_id'           => (string) $i,
-        'titulo'        => ucfirst($tipo) . ' de ejemplo ' . $i,
-        'imagen'        => null,
-        'tipo'          => $tipo,
-        'generos'       => $generos,
-        'descripcion'   => 'Una ciudad que nunca duerme guarda un secreto que podría cambiarlo todo.',
-        'fecha_estreno' => now(),
-    ];
 
-    return view('modules.inicio', [
-        'destacado' => $falso(0, 'pelicula', ['Drama', 'Misterio']),
-        'peliculas' => collect(range(1, 10))->map(fn ($i) => $falso($i, 'pelicula', ['Acción', 'Terror'])),
-        'series'    => collect(range(11, 20))->map(fn ($i) => $falso($i, 'serie', ['Drama', 'Comedia'])),
-        'anime'     => collect(range(21, 30))->map(fn ($i) => $falso($i, 'anime', ['Aventura'])),
-    ]);
-});
+
+// Inicio real 
 Route::get('/', [ContenidoController::class, 'obtenerTodos'])
     ->name('inicio');
-
-// Prueba
-Route::get('/lol', function () {
-    return view('modules.series.show');
-});
 
 //Rutas de reproduccion
 
@@ -95,6 +72,6 @@ Route::get('/catalogo/{id}', [ContenidoController::class, 'mostrar'])
     ->name('catalogo.mostrar');
 
 
-    // Rutas Jimena
-Route::get('/login', function () { return view('modules.auth.login'); })->name('login');
-Route::get('/registro', function () { return view('modules.auth.register'); })->name('register');
+    // Rutas de login 
+Route::view('/login', 'modules.auth.login')->name('login');
+Route::view('/registro', 'modules.auth.register')->name('register');
