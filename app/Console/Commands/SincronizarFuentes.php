@@ -16,6 +16,7 @@ class SincronizarFuentes extends Command
         {--limite= : Maximo de contenidos a procesar en esta ejecucion}
         {--titulo= : Solo contenidos cuyo titulo contenga este texto (no usa ni guarda el avance)}
         {--pendientes : Solo animes que todavia no tienen tmdb_id (no usa ni guarda el avance)}
+        {--verificar : Al terminar, verifica las fuentes pendientes (fuentes:verificar)}
         {--reiniciar : Reinicia el avance y empieza desde el primer contenido}';
 
     protected $description = 'Sincroniza las fuentes de reproduccion del catalogo';
@@ -144,6 +145,13 @@ class SincronizarFuentes extends Command
 
         if (!empty($fallidos)) {
             $this->warn('Contenidos con error (no se reintentan solos): ' . implode(', ', $fallidos));
+        }
+
+        if ($this->option('verificar')) {
+            $this->newLine();
+            $this->info('Verificando las fuentes pendientes...');
+
+            $this->call('fuentes:verificar');
         }
 
         return Command::SUCCESS;

@@ -11,7 +11,7 @@ class CicloDiario extends Command
         {--limite= : Limite para esta ejecucion (paginas en catalogo:importar, contenidos en los pasos que tengan --limite)}
         {--reiniciar : Reinicia el avance guardado en los pasos que lo permiten}';
 
-    protected $description = 'Ejecuta en orden la importacion del catalogo y la sincronizacion de fuentes';
+    protected $description = 'Ejecuta en orden la importacion del catalogo, la sincronizacion y verificacion de fuentes y los embeddings';
 
     public function handle()
     {
@@ -37,9 +37,23 @@ class CicloDiario extends Command
             ['catalogo:actualizar-emision', []],
         ];
 
-        if (now('America/Costa_Rica')->isSunday()) {
+        $esDomingo = now('America/Costa_Rica')->isSunday();
+
+        if ($esDomingo) {
             $pasos[] = ['fuentes:sincronizar', ['--pendientes' => true]];
         }
+
+        // La verificacion va separada de la sincronizacion: primero se crean
+        // las fuentes y luego se verifican las nuevas o modificadas
+        $pasos[] = ['fuentes:verificar', []];
+
+        // Los domingos tambien se vuelven a revisar las que estaban caidas
+        if ($esDomingo) {
+            $pasos[] = ['fuentes:verificar', ['--estado' => 'no_disponible']];
+        }
+
+        // Embeddings de los contenidos nuevos (busqueda por significado)
+        $pasos[] = ['catalogo:generar-embeddings', []];
 
         $reiniciar = (bool) $this->option('reiniciar');
         $fallos = 0;

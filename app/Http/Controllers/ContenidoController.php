@@ -6,11 +6,14 @@ use Illuminate\Http\Request;
 use App\Models\Contenido;
 use App\Models\Temporada;
 use App\Models\Episodio;
+use App\Services\Catalogo\BuscadorService;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Log;
 
 class ContenidoController extends Controller
 {
     // Cantidad de contenidos por pagina en los listados
-    private const POR_PAGINA = 24;
+    private const POR_PAGINA = 25;
 
     // Cantidad de contenidos en la lista de destacados del inicio
     private const POR_FILA_INICIO = 10;
@@ -49,11 +52,34 @@ class ContenidoController extends Controller
     }
 
     // Catalogo con filtros opcionales
-    public function buscar(Request $request)
+    public function buscar(Request $request, BuscadorService $buscador)
     {
         $nombre = $request->input('nombre');
         $tipo = $request->input('tipo');
         $genero = $request->input('genero');
+
+        // Con texto (y sin genero) primero se intenta la busqueda por significado
+        if ($nombre && !$genero) {
+            try {
+                $resultados = $buscador->buscarHibrido($nombre, $tipo, self::POR_PAGINA);
+
+                if ($resultados->isNotEmpty()) {
+                    $contenidos = new LengthAwarePaginator(
+                        $resultados,
+                        $resultados->count(),
+                        self::POR_PAGINA,
+                        1,
+                        ['path' => $request->url(), 'query' => $request->query()]
+                    );
+
+                    return view('modules.catalogo.index', compact('contenidos'));
+                }
+            } catch (\Throwable $e) {
+                // Si falla la API o no hay vectores, se usa la busqueda por titulo
+                Log::warning('Busqueda por significado fallo', ['mensaje' => $e->getMessage()]);
+            }
+        }
+
         $consulta = Contenido::conFuentes();
 
         if ($nombre) {

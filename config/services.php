@@ -53,4 +53,7 @@ return [
         'probar_en_desarrollo' => env('REPRODUCCION_PROBAR_DESARROLLO', false),
     ],
 
+    'gemini' => [
+        'key' => env('GEMINI_API_KEY'),
+    ],
 ];
