@@ -17,6 +17,7 @@
         </div>
 
         <main class="auth-main">
+            @include('partials.alertas')
             @yield('content')
         </main>
 

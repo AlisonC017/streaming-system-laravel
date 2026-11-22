@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ControllerProgreso;
 use App\Http\Controllers\ReproductorController;
 use App\Http\Controllers\ContenidoController;
-
+use App\Http\Controllers\AuthController;
 
 
 
@@ -74,7 +74,10 @@ Route::get('/catalogo/{id}', [ContenidoController::class, 'mostrar'])
 
 // Rutas de login 
 Route::view('/login', 'modules.auth.login')->name('login');
+Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::view('/registro', 'modules.auth.register')->name('register');
+Route::post('/registro', [AuthController::class, 'registrar'])->name('register.post');
 
 // Rutas del dashboard 
 Route::view('/admin', 'modules.admin.dashboard')->name('admin');
