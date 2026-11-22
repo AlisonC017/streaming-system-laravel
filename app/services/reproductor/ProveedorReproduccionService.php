@@ -110,9 +110,9 @@ class ProveedorReproduccionService
             }
 
             foreach ($fuentes as $datos) {
-                $fuente = $this->fuenteManager->guardarFuente($datos);
-
-                $this->verificador->verificar($fuente->_id);
+                // Solo se guarda (queda 'pendiente'). La verificacion se hace aparte
+                // con el comando fuentes:verificar
+                $this->fuenteManager->guardarFuente($datos);
 
                 $total++;
             }
