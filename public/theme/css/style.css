@@ -1974,3 +1974,135 @@ a.chip:hover {
 .search-big.is-collapsible .search-big__fields{ opacity:0; pointer-events:none; transition:opacity .2s ease; }
 .search-big.is-collapsible.is-open .search-big__fields{ opacity:1; pointer-events:auto; transition-delay:.15s; }
 .search-big.is-collapsible.is-open .search-big__toggle{ color:#fff; }
+
+/* ---------- Header: marca en una sola línea ---------- */
+.brand {
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.brand b {
+    font-size: 0.82rem;
+    font-weight: 500;
+    letter-spacing: 0;
+    color: var(--muted);
+}
+.header-signin {
+    white-space: nowrap;
+}
+
+/* ---------- Header: buscador colapsable (lupa -> se expande) ---------- */
+.header-actions .search-big.is-collapsible {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    transition:
+        width 0.3s var(--ease),
+        background-color 0.2s,
+        border-color 0.2s;
+}
+.header-actions .search-big.is-collapsible.is-open {
+    width: 450px;
+    background: var(--surface);
+    border-color: var(--line-2);
+}
+.header-actions .search-big__toggle {
+    width: 38px;
+    height: 100%;
+    min-height: 0;
+    color: var(--text-soft);
+}
+.header-actions .search-big__toggle:hover {
+    color: #fff;
+}
+.header-actions .search-big__fields {
+    gap: 0.4rem;
+    padding-right: 0.35rem;
+}
+.header-actions .search-big input {
+    padding: 0 0.3rem;
+    font-size: 0.9rem;
+}
+.header-actions .search-big select {
+    height: 30px;
+    padding: 0 0.5rem;
+    font-size: 0.85rem;
+}
+.header-actions .search-big .btn {
+    padding: 0.45rem 0.9rem;
+    font-size: var(--fs-200);
+}
+
+/* Al abrir el buscador, libera espacio en el header */
+.header-inner:has(.search-big.is-open) .brand b,
+.header-inner:has(.search-big.is-open) .header-signin {
+    display: none;
+}
+
+/* Responsive */
+@media (max-width: 1180px) {
+    .brand b {
+        display: none;
+    }
+}
+@media (max-width: 860px) {
+    .header-actions .search-big.is-collapsible.is-open {
+        position: fixed;
+        top: calc(var(--header-h) + 8px);
+        left: 1rem;
+        right: 1rem;
+        width: auto;
+        background: var(--surface-2);
+    }
+}
+
+/* Todas las tarjetas del carrusel con el mismo ancho */
+.track .poster-card {
+    flex: 0 0 clamp(150px, 17vw, 240px);
+    width: clamp(150px, 17vw, 240px);
+    min-width: 0;
+    max-width: 100%;
+}
+.track .poster-info {
+    min-width: 0;
+}
+.track .poster-info h3,
+.track .poster-info p {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Por si alguna imagen tiene otra proporción */
+.poster img,
+.content-poster img {
+    object-fit: cover;
+    object-position: center top;
+}
+
+/* Numeros de la paginacion */
+
+.pagination-wrap nav > div:last-child {
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 1.2rem;
+}
+.pagination-wrap nav p.small {
+    margin: 0 !important;
+    text-align: center;
+    color: var(--muted) !important;
+    font-size: var(--fs-200);
+}
+.pagination-wrap nav p.small .fw-semibold {
+    color: var(--text);
+}
+.pagination-wrap .pagination {
+    margin: 0;
+}

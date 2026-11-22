@@ -1,7 +1,7 @@
 {{-- Detalle. Recibe: $contenido, $temporadas y $episodiosPorTemporada
      (solo temporadas y episodios con fuentes reproducibles) --}}
 @extends('layouts.app')
-@section('titulo', ($contenido->titulo ?? 'Detalle') . ' · Stream Line')
+@section('titulo', ($contenido->titulo ?? 'Detalle') . ' · Aetherix')
 
 @section('contenido')
 
@@ -79,8 +79,7 @@
 
                     @if ($lista->count() > $limite)
                         <button type="button" class="btn btn-ghost btn-sm episode-toggle"
-                            data-mas="Mostrar más ({{ $lista->count() - $limite }})"
-                            data-menos="Mostrar menos"
+                            data-mas="Mostrar más ({{ $lista->count() - $limite }})" data-menos="Mostrar menos"
                             aria-expanded="false">
                             Mostrar más ({{ $lista->count() - $limite }})
                         </button>
@@ -92,17 +91,23 @@
         </section>
 
         <style>
-            .episode-card[hidden] { display: none; }
-            .episode-toggle { display: block; margin: 16px auto 0; }
+            .episode-card[hidden] {
+                display: none;
+            }
+
+            .episode-toggle {
+                display: block;
+                margin: 16px auto 0;
+            }
         </style>
 
         <script>
-            document.querySelectorAll('.episode-toggle').forEach(function (boton) {
-                boton.addEventListener('click', function () {
+            document.querySelectorAll('.episode-toggle').forEach(function(boton) {
+                boton.addEventListener('click', function() {
                     const bloque = boton.closest('.season-block');
                     const abierto = boton.getAttribute('aria-expanded') === 'true';
 
-                    bloque.querySelectorAll('[data-extra]').forEach(function (tarjeta) {
+                    bloque.querySelectorAll('[data-extra]').forEach(function(tarjeta) {
                         tarjeta.hidden = abierto;
                     });
 
@@ -110,7 +115,10 @@
                     boton.textContent = abierto ? boton.dataset.mas : boton.dataset.menos;
 
                     if (abierto) {
-                        bloque.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        bloque.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
                     }
                 });
             });

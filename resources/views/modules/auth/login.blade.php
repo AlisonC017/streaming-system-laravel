@@ -1,4 +1,4 @@
-@extends('layouts.auth') @section('title', 'Iniciar sesión · Stream Line') @section('content')<div class="auth-card"><span
+@extends('layouts.auth') @section('title', 'Iniciar sesión · Aetherix') @section('content')<div class="auth-card"><span
         class="eyebrow">Qué bueno tenerte de vuelta</span>
     <h1>Iniciar sesión</h1>
     <p class="sub">Continúa donde dejaste tu historia.</p>

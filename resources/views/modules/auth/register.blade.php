@@ -1,5 +1,5 @@
-@extends('layouts.auth') @section('title', 'Crear cuenta · Stream Line') @section('content')<div class="auth-card"><span
-        class="eyebrow">Únete a Stream Line</span>
+@extends('layouts.auth') @section('title', 'Crear cuenta · Aetherix') @section('content')<div class="auth-card"><span
+        class="eyebrow">Únete a Aetherix</span>
     <h1>Crea tu cuenta</h1>
     <p class="sub">Tu próxima historia te espera.</p>
     <form action="{{ route('register') }}" method="GET">
