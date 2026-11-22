@@ -1,0 +1,423 @@
+/* ==========================================================================
+   cuenta.css — Área del cliente (/cuenta), plan-card y badge-estado.
+   Usa las variables de style.css (--surface, --line, --lilac, etc.).
+   ========================================================================== */
+
+/* ---------- Estructura: menú lateral + contenido ---------- */
+.cuenta {
+    padding-top: calc(var(--header-h) + 2rem);
+    padding-bottom: 4rem;
+    min-height: 70vh;
+}
+.cuenta-grid {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: clamp(1.2rem, 3vw, 2.4rem);
+    align-items: start;
+}
+.cuenta-side {
+    position: sticky;
+    top: calc(var(--header-h) + 1rem);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1rem;
+}
+.cuenta-side h2 {
+    margin: 0 0 0.6rem 0.5rem;
+    font-size: var(--fs-100);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+.cuenta-nav {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+.cuenta-nav a,
+.cuenta-nav button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 0.65rem 0.8rem;
+    border: 0;
+    border-radius: 10px;
+    background: none;
+    color: var(--text-soft);
+    font-family: inherit;
+    font-size: var(--fs-300);
+    font-weight: 600;
+    cursor: pointer;
+}
+.cuenta-nav a:hover,
+.cuenta-nav button:hover {
+    background: rgba(167, 139, 250, 0.12);
+    color: #fff;
+}
+.cuenta-nav a[aria-current="page"] {
+    background: rgba(167, 139, 250, 0.2);
+    color: #fff;
+    box-shadow: inset 3px 0 0 var(--lilac);
+}
+.cuenta-nav__sep {
+    margin-top: 0.8rem;
+    padding-top: 0.8rem;
+    border-top: 1px solid var(--line-soft);
+}
+
+.cuenta-main > * + * {
+    margin-top: 1.4rem;
+}
+.cuenta-head h1 {
+    margin: 0;
+    font-size: var(--fs-700);
+}
+.cuenta-head p {
+    margin: 0.3rem 0 0;
+    color: var(--muted);
+}
+.cuenta-sec-title {
+    margin: 0 0 0.9rem;
+    font-size: var(--fs-500);
+}
+
+/* ---------- Banner de estado ---------- */
+.banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 1.2rem 1.4rem;
+    border: 1px solid var(--line-2);
+    border-radius: var(--radius);
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.18), rgba(20, 14, 32, 0.9));
+}
+.banner h2 {
+    margin: 0;
+    font-size: var(--fs-500);
+    color: #fff;
+}
+.banner p {
+    margin: 0.25rem 0 0;
+    color: var(--text-soft);
+    font-size: var(--fs-300);
+}
+.banner--alerta {
+    border-color: rgba(251, 113, 133, 0.5);
+    background: rgba(225, 29, 72, 0.1);
+}
+
+/* ---------- Planes ---------- */
+.planes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 1rem;
+}
+.plan-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    padding: 1.3rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+}
+.plan-card.is-actual {
+    border-color: var(--lilac);
+    box-shadow: 0 0 0 1px var(--lilac), 0 20px 50px -25px rgba(124, 58, 237, 0.8);
+}
+.plan-card__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+}
+.plan-card__head h3 {
+    margin: 0;
+    font-size: var(--fs-500);
+    color: #fff;
+}
+.plan-card__precio {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.1;
+}
+.plan-card__precio small {
+    font-family: var(--font-body);
+    font-size: var(--fs-200);
+    font-weight: 600;
+    color: var(--muted);
+}
+.plan-card .chip {
+    align-self: flex-start;
+}
+.plan-card .btn {
+    margin-top: auto;
+}
+.plan-card .btn[aria-disabled="true"] {
+    cursor: default;
+    pointer-events: none;
+    border-style: dashed;
+}
+
+/* ---------- Atajos del panel ---------- */
+.atajos {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+.cuenta-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1.2rem 1.4rem;
+}
+.cuenta-card small {
+    display: block;
+    font-size: var(--fs-100);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+.cuenta-card strong {
+    display: block;
+    margin: 0.25rem 0 0.4rem;
+    font-size: var(--fs-500);
+    color: #fff;
+}
+.cuenta-card a {
+    color: var(--lilac-2);
+    font-weight: 700;
+    font-size: var(--fs-300);
+}
+.cuenta-card a:hover {
+    color: #fff;
+}
+
+/* ---------- Etiquetas de estado (el texto siempre dice el estado) ---------- */
+.badge-estado {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.3rem 0.8rem;
+    border-radius: 999px;
+    border: 2px solid transparent;
+    font-size: var(--fs-200);
+    font-weight: 700;
+    white-space: nowrap;
+}
+.badge-estado--activa {
+    background: var(--violet);
+    border-color: var(--violet);
+    color: #fff;
+}
+.badge-estado--pendiente {
+    border-color: var(--line-2);
+    color: var(--text-soft);
+}
+.badge-estado--suspendida {
+    border-style: dashed;
+    border-color: var(--danger);
+    color: #fecdd3;
+}
+.badge-estado--cancelada {
+    border-style: dotted;
+    border-color: var(--muted);
+    color: var(--muted);
+}
+.badge-estado--sin {
+    border-style: dotted;
+    border-color: var(--muted);
+    color: var(--text-soft);
+}
+
+/* ---------- Tabla (historial) ---------- */
+.filtro {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+}
+.cuenta select,
+.field select {
+    color-scheme: dark;
+    background: rgba(28, 20, 48, 0.7);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    color: var(--text);
+    padding: 0.6rem 0.9rem;
+    font-size: var(--fs-300);
+    font-family: inherit;
+}
+.field select {
+    width: 100%;
+    padding: 1.45rem 1rem 0.5rem;
+    font-size: 1rem;
+    outline: 0;
+}
+.field select:focus {
+    border-color: var(--lilac);
+    box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.18);
+}
+.tabla-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+}
+.tabla {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--fs-300);
+}
+.tabla th,
+.tabla td {
+    padding: 0.85rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--line-soft);
+}
+.tabla thead th {
+    background: var(--surface-2);
+    color: var(--text-soft);
+    font-size: var(--fs-200);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+.tabla tbody tr:last-child td {
+    border-bottom: 0;
+}
+.tabla .mono {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.04em;
+}
+
+.vacio {
+    padding: 1.6rem;
+    text-align: center;
+    color: var(--muted);
+    border: 1px dashed var(--line-2);
+    border-radius: var(--radius);
+}
+
+/* ---------- Mensajes ---------- */
+.alert--ok {
+    background: rgba(16, 185, 129, 0.12);
+    border-color: rgba(52, 211, 153, 0.4);
+    color: #a7f3d0;
+}
+.alert ul {
+    margin: 0;
+    padding-left: 1.1rem;
+}
+
+/* ---------- Nivel de administrador en el menú ---------- */
+.cuenta-nivel {
+    margin: 0 0 0.8rem 0.5rem;
+}
+
+/* ---------- Compatibilidad: las vistas de admin usan clases tipo Bootstrap
+   (card, table, btn-info...). Aquí se ven con el mismo tema oscuro del sitio. ---------- */
+.cuenta-main .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    color: var(--text-soft);
+}
+.cuenta-main .card-header {
+    background: transparent;
+    border-bottom: 1px solid var(--line-soft);
+    padding: 1rem 1.4rem;
+}
+.cuenta-main .card-body {
+    padding: 1.2rem 1.4rem;
+}
+.cuenta-main .card-title {
+    margin: 0;
+    font-size: var(--fs-500);
+    color: #fff;
+}
+.cuenta-main .table {
+    --bs-table-bg: transparent;
+    --bs-table-color: var(--text-soft);
+    --bs-table-border-color: var(--line-soft);
+    width: 100%;
+    margin: 0;
+    color: var(--text-soft);
+    font-size: var(--fs-300);
+}
+.cuenta-main .table th,
+.cuenta-main .table td {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--line-soft);
+}
+.cuenta-main .table thead th {
+    background: var(--surface-2);
+    color: var(--text-soft);
+    font-size: var(--fs-200);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+.cuenta-main .text-primary {
+    color: var(--lilac-2) !important;
+}
+.cuenta-main .text-right {
+    text-align: right;
+}
+.cuenta-main .btn-info {
+    background: rgba(167, 139, 250, 0.16);
+    border-color: var(--line-2);
+    color: #fff;
+}
+.cuenta-main .btn-danger {
+    background: rgba(225, 29, 72, 0.18);
+    border-color: rgba(251, 113, 133, 0.5);
+    color: #fecdd3;
+}
+.cuenta-main .form-control {
+    color-scheme: dark;
+    background: rgba(28, 20, 48, 0.7);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    color: var(--text);
+}
+.cuenta-main .form-inline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+}
+.cuenta-main .mr-2 {
+    margin-right: 0.5rem;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+    .cuenta-grid {
+        grid-template-columns: 1fr;
+    }
+    .cuenta-side {
+        position: static;
+    }
+    .cuenta-nav {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+    .cuenta-nav a,
+    .cuenta-nav button {
+        width: auto;
+    }
+    .cuenta-nav__sep {
+        margin: 0;
+        padding: 0;
+        border: 0;
+    }
+    .atajos {
+        grid-template-columns: 1fr;
+    }
+}

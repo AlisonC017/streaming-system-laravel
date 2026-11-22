@@ -77,3 +77,19 @@ Route::view('/login', 'modules.auth.login')->name('login');
 Route::view('/registro', 'modules.auth.register')->name('register');
 
 Route::view('/admin', 'modules.admin.dashboard')->name('admin');
+
+
+// Rutas prueba logins
+Route::get('/demo/panel', function () {
+    session(['nombre' => 'Ali']);
+    return view('modules.cuenta-cliente.panel', [
+        'usuario' => (object)['nombre' => 'Ali'],
+        'suscripcion' => null,
+        'planes' => [],
+    ]);
+});
+Route::get('/demo/historial', fn() => view('modules.cuenta-cliente.historial', ['pagos' => []]));
+Route::get('/demo/auditoria', function () {
+    session(['nivel' => 'Soporte']);
+    return view('modules.admin.auditoria', ['registros' => []]);
+});
