@@ -28,17 +28,29 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>Básico</td>
-                                    <td>$7.99</td>
-                                    <td>1080p</td>
-                                    @if (session('nivel') === 'Total')
-                                        <td class="text-right">
-                                            <button class="btn btn-info btn-sm">Editar</button>
-                                            <button class="btn btn-danger btn-sm">Descontinuar</button>
-                                        </td>
-                                    @endif
-                                </tr>
+                                @forelse ($planes as $plan)
+                                    <tr>
+                                        <td>{{ $plan->nombre_plan }}</td>
+                                        <td>${{ number_format($plan->precio, 2) }}</td>
+                                        <td>{{ $plan->calidad }}</td>
+                                        @if (session('nivel') === 'Total')
+                                            <td class="text-right">
+                                                <a href="#" class="btn btn-info btn-sm">Editar</a>
+                                                <form method="POST" action="#" class="d-inline"
+                                                    onsubmit="return confirm('¿Descontinuar el plan {{ $plan->nombre_plan }}?')">
+                                                    @csrf
+                                                    <button type="submit"
+                                                        class="btn btn-danger btn-sm">Descontinuar</button>
+                                                </form>
+                                            </td>
+                                        @endif
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="{{ session('nivel') === 'Total' ? 4 : 3 }}">Aún no hay planes
+                                            registrados.</td>
+                                    </tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
@@ -46,4 +58,45 @@
             </div>
         </div>
     </div>
-@endsection
+
+    @if (session('nivel') === 'Total')
+        <div class="modal fade" id="modalPlan" tabindex="-1" role="dialog" aria-labelledby="modalPlanTitulo"
+            aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <form method="POST" action="#">
+                        @csrf
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="modalPlanTitulo">Nuevo plan</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+                                <i class="tim-icons icon-simple-remove"></i>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label for="nombre_plan">Nombre</label>
+                                <input type="text" class="form-control" id="nombre_plan" name="nombre_plan" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="precio">Precio mensual ($)</label>
+                                <input type="number" step="0.01" min="0" class="form-control" id="precio"
+                                    name="precio" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="calidad">Resolución</label>
+                                <select class="form-control" id="calidad" name="calidad">
+                                    <option>1080p</option>
+                                    <option>4K</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-primary btn-sm">Guardar plan</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        @endif
+    @endsection
