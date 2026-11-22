@@ -76,7 +76,12 @@ Route::get('/catalogo/{id}', [ContenidoController::class, 'mostrar'])
 Route::view('/login', 'modules.auth.login')->name('login');
 Route::view('/registro', 'modules.auth.register')->name('register');
 
+// Rutas del dashboard 
 Route::view('/admin', 'modules.admin.dashboard')->name('admin');
+
+Route::view('/admin/cobros',   'modules.admin.cobros')->name('admin.cobros');
+Route::view('/admin/reportes', 'modules.admin.reportes')->name('admin.reportes');
+Route::view('/admin/usuarios', 'modules.admin.usuarios')->name('admin.usuarios');
 
 
 // Rutas prueba logins
@@ -111,7 +116,24 @@ Route::get('/demo/admin', function () {
     return view('modules.admin.dashboard');
 });
 
+// Prueba
+Route::get('/demo/salir', function () {
+    session()->forget('nivel');
+    return redirect('/');
+});
+
 Route::get('/demo/auditoria', function () {
     session(['nivel' => 'Soporte']);
     return view('modules.admin.auditoria', ['registros' => []]);
 });
+
+// papas
+//Prueba
+Route::view('/admin', 'modules.admin.dashboard', [
+    'suscripcionesActivas' => 0, 'ingresosMes' => 0, 'cobrosFallidos' => 0, 'cancelaciones' => 0, 'ultimosCobros' => [],
+])->name('admin');
+
+Route::view('/admin/planes',   'modules.admin.planes',   ['planes' => []])->name('admin.planes');
+Route::view('/admin/cobros',   'modules.admin.cobros',   ['suscripciones' => [], 'cobros' => []])->name('admin.cobros');
+Route::view('/admin/reportes', 'modules.admin.reportes', ['rendimiento' => []])->name('admin.reportes');
+Route::view('/admin/usuarios', 'modules.admin.usuarios', ['clientes' => []])->name('admin.usuarios');
