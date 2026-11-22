@@ -72,6 +72,8 @@ Route::get('/catalogo/{id}', [ContenidoController::class, 'mostrar'])
     ->name('catalogo.mostrar');
 
 
-    // Rutas de login 
+// Rutas de login 
 Route::view('/login', 'modules.auth.login')->name('login');
 Route::view('/registro', 'modules.auth.register')->name('register');
+
+Route::view('/admin', 'modules.admin.dashboard')->name('admin');
