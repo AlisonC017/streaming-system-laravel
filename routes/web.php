@@ -80,15 +80,37 @@ Route::view('/admin', 'modules.admin.dashboard')->name('admin');
 
 
 // Rutas prueba logins
+// Rutas demo de CLIENTE: sin nivel
 Route::get('/demo/panel', function () {
+    session()->forget('nivel');
     session(['nombre' => 'Ali']);
     return view('modules.cuenta-cliente.panel', [
-        'usuario' => (object)['nombre' => 'Ali'],
-        'suscripcion' => null,
-        'planes' => [],
+        'usuario' => (object) ['nombre' => 'Ali'],
+        'suscripcion' => request('con') ? (object) [
+            'plan' => 'Premium',
+            'precio' => 12.99,
+            'proximo_cobro' => '2026-12-22',
+            'estado' => 'Activa',
+        ] : null,
+        'planes' => [
+            (object) ['id_plan' => 1, 'nombre_plan' => 'Básico', 'calidad' => 'HD', 'precio' => 7.99],
+            (object) ['id_plan' => 2, 'nombre_plan' => 'Premium', 'calidad' => '4K', 'precio' => 12.99],
+        ],
     ]);
 });
-Route::get('/demo/historial', fn() => view('modules.cuenta-cliente.historial', ['pagos' => []]));
+
+Route::get('/demo/historial', function () {
+    session()->forget('nivel');
+    session(['nombre' => 'Ali']);
+    return view('modules.cuenta-cliente.historial', ['pagos' => []]);
+});
+
+// Rutas demo de ADMIN: con nivel
+Route::get('/demo/admin', function () {
+    session(['nivel' => 'Total', 'nombre' => 'Ali']);
+    return view('modules.admin.dashboard');
+});
+
 Route::get('/demo/auditoria', function () {
     session(['nivel' => 'Soporte']);
     return view('modules.admin.auditoria', ['registros' => []]);
