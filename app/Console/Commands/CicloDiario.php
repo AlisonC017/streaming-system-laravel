@@ -9,6 +9,9 @@ class CicloDiario extends Command
 {
     protected $signature = 'catalogo:ciclo-diario
         {--limite= : Limite para esta ejecucion (paginas en catalogo:importar, contenidos en los pasos que tengan --limite)}
+        {--peliculas= : Paginas de peliculas a importar (por defecto 3)}
+        {--series= : Paginas de series a importar (por defecto 3)}
+        {--anime= : Paginas de anime a importar (por defecto 3)}
         {--reiniciar : Reinicia el avance guardado en los pasos que lo permiten}';
 
     protected $description = 'Ejecuta en orden la importacion del catalogo, la sincronizacion y verificacion de fuentes y los embeddings';
@@ -25,13 +28,25 @@ class CicloDiario extends Command
 
         $limite = $limite !== null ? (int) $limite : null;
 
-        // Sin --limite, la importacion sigue usando las 3 paginas de siempre
-        $paginas = $limite ?? 3;
+        // Paginas por tipo: 3 por defecto, o --limite si se indica, o la opcion de cada tipo
+        $paginas = [];
+
+        foreach (['peliculas', 'series', 'anime'] as $tipo) {
+            $valor = $this->option($tipo);
+
+            if ($valor !== null && (!ctype_digit((string) $valor) || (int) $valor < 1)) {
+                $this->error("--{$tipo} debe ser un entero mayor o igual a 1.");
+
+                return Command::FAILURE;
+            }
+
+            $paginas[$tipo] = $valor !== null ? (int) $valor : ($limite ?? 3);
+        }
 
         $pasos = [
-            ['catalogo:importar', ['fuente' => 'tmdb', 'tipo' => 'peliculas', 'paginas' => $paginas]],
-            ['catalogo:importar', ['fuente' => 'tmdb', 'tipo' => 'series', 'paginas' => $paginas]],
-            ['catalogo:importar', ['fuente' => 'anilist', 'tipo' => 'anime', 'paginas' => $paginas]],
+            ['catalogo:importar', ['fuente' => 'tmdb', 'tipo' => 'peliculas', 'paginas' => $paginas['peliculas']]],
+            ['catalogo:importar', ['fuente' => 'tmdb', 'tipo' => 'series', 'paginas' => $paginas['series']]],
+            ['catalogo:importar', ['fuente' => 'anilist', 'tipo' => 'anime', 'paginas' => $paginas['anime']]],
             ['tvmaze:sincronizar', []],
             ['fuentes:sincronizar', []],
             ['catalogo:actualizar-emision', []],
@@ -45,11 +60,11 @@ class CicloDiario extends Command
 
         // La verificacion va separada de la sincronizacion: primero se crean
         // las fuentes y luego se verifican las nuevas o modificadas
-        $pasos[] = ['fuentes:verificar', []];
+        $pasos[] = ['fuentes:verificar', ['--concurrencia' => 50]];
 
         // Los domingos tambien se vuelven a revisar las que estaban caidas
         if ($esDomingo) {
-            $pasos[] = ['fuentes:verificar', ['--estado' => 'no_disponible']];
+            $pasos[] = ['fuentes:verificar', ['--estado' => 'no_disponible'], ['--concurrencia' => 50]];
         }
 
         // Embeddings de los contenidos nuevos (busqueda por significado)

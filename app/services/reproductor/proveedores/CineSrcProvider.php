@@ -4,11 +4,12 @@ namespace App\Services\Reproductor\Proveedores;
 
 use App\Models\Contenido;
 use App\Models\Episodio;
-use App\Models\Identificador;
 use App\Models\Temporada;
+
 
 class CineSrcProvider implements ProveedorInterface
 {
+    use ResuelveEpisodioTmdb;
     public function obtenerNombre()
     {
         return 'cinesrc';
@@ -18,11 +19,7 @@ class CineSrcProvider implements ProveedorInterface
     {
         $fuentes = [];
 
-        $identificador = Identificador::where('contenido_id', $contenido->_id)->first();
-
-        $id = $identificador && $identificador->tmdb_id
-            ? (string) $identificador->tmdb_id
-            : '';
+        $id = $this->obtenerTmdbId($contenido);
 
         if ($id == '') {
             return $fuentes;
@@ -43,8 +40,14 @@ class CineSrcProvider implements ProveedorInterface
                 return $fuentes;
             }
 
-            $numeroTemporada = $temporada->numero;
-            $numeroEpisodio = $episodio->numero;
+            // Temporada y episodio en la numeracion de TMDB (null = no se puede asegurar)
+            $posicion = $this->resolverPosicionTmdb($contenido, $temporada, $episodio);
+
+            if (!$posicion) {
+                return $fuentes;
+            }
+
+            [$numeroTemporada, $numeroEpisodio] = $posicion;
 
             $url = "https://cinesrc.st/embed/tv/{$id}?s={$numeroTemporada}&e={$numeroEpisodio}";
 

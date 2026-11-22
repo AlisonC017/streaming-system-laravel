@@ -20,7 +20,7 @@ class BuscadorService
             return [];
         }
 
-        $contenidos = Contenido::where(
+        $contenidos = Contenido::conFuentes()->where(
             'titulo',
             'regexp',
             "/" . preg_quote($nombre, '/') . "/i"

@@ -151,7 +151,7 @@ class NormalizadorIdsAnime
         return trim(preg_replace($patron, '', (string) $titulo));
     }
 
-    protected function esTemporadaPosterior($titulo)
+    public function esTemporadaPosterior($titulo)
     {
         return $this->tituloBase($titulo) !== trim((string) $titulo);
     }

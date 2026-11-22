@@ -4,11 +4,11 @@ namespace App\Services\Reproductor\Proveedores;
 
 use App\Models\Contenido;
 use App\Models\Episodio;
-use App\Models\Identificador;
 use App\Models\Temporada;
 
 class SuperEmbedProvider implements ProveedorInterface
 {
+    use ResuelveEpisodioTmdb;
     public function obtenerNombre()
     {
         return 'superembed';
@@ -18,11 +18,7 @@ class SuperEmbedProvider implements ProveedorInterface
     {
         $fuentes = [];
 
-        $identificador = Identificador::where('contenido_id', $contenido->_id)->first();
-
-        $id = $identificador && $identificador->tmdb_id
-            ? (string) $identificador->tmdb_id
-            : '';
+        $id = $this->obtenerTmdbId($contenido);
 
         if ($id == '') {
             return $fuentes;
@@ -42,12 +38,14 @@ class SuperEmbedProvider implements ProveedorInterface
             if (!$temporada) {
                 return $fuentes;
             }
+            $posicion = $this->resolverPosicionTmdb($contenido, $temporada, $episodio);
 
-            $numeroTemporada = $temporada->numero;
-            $numeroEpisodio = $episodio->numero;
+            if (!$posicion) {
+                return $fuentes;
+            }
 
+            [$numeroTemporada, $numeroEpisodio] = $posicion;
             $url = "https://multiembed.mov/?video_id={$id}&tmdb=1&s={$numeroTemporada}&e={$numeroEpisodio}";
-
             $fuentes[] = $this->armarFuente($contenido, $episodio, $url);
         }
 
