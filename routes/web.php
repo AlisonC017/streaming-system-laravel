@@ -140,3 +140,44 @@ Route::view('/admin/planes',   'modules.admin.planes',   ['planes' => []])->name
 Route::view('/admin/cobros',   'modules.admin.cobros',   ['suscripciones' => [], 'cobros' => []])->name('admin.cobros');
 Route::view('/admin/reportes', 'modules.admin.reportes', ['rendimiento' => []])->name('admin.reportes');
 Route::view('/admin/usuarios', 'modules.admin.usuarios', ['clientes' => []])->name('admin.usuarios');
+// Rutas demo integrante 2 (planes y suscripcion): datos falsos para ver las vistas sin backend
+// ?estado=Activa|Pendiente|Suspendida|Cancelada  /  ?sin=1 para cliente sin suscripcion
+Route::prefix('demo')->group(function () {
+    $planes = fn() => [
+        (object) ['id_plan' => 1, 'nombre_plan' => 'Basico',   'precio' => 6.99,  'calidad' => 'SD'],
+        (object) ['id_plan' => 2, 'nombre_plan' => 'Estandar', 'precio' => 10.99, 'calidad' => 'HD'],
+        (object) ['id_plan' => 4, 'nombre_plan' => 'Familiar', 'precio' => 12.99, 'calidad' => 'FullHD'],
+        (object) ['id_plan' => 3, 'nombre_plan' => 'Premium',  'precio' => 15.99, 'calidad' => '4K'],
+    ];
+    $suscripcion = fn() => request('sin') ? null : (object) [
+        'id_suscripcion' => 1, 'id_plan' => 2, 'nombre_plan' => 'Estandar', 'precio' => 10.99, 'calidad' => 'HD',
+        'fecha_inicio' => '2026-09-06', 'fecha_proximo_cobro' => '2026-12-04',
+        'estado' => request('estado', 'Activa'),
+        'fecha_cancelacion' => request('estado') === 'Cancelada' ? '2026-11-20' : null,
+        'ultimos4' => '1111',
+    ];
+    $metodos = fn() => [
+        (object) ['id_metodo' => 1, 'ultimos4' => '1111', 'fecha_vencimiento' => '2028-05-31', 'estado' => 'Activo'],
+        (object) ['id_metodo' => 7, 'ultimos4' => '4242', 'fecha_vencimiento' => '2026-01-31', 'estado' => 'Inactivo'],
+    ];
+
+    Route::get('/planes', function () use ($planes, $suscripcion) {
+        return view('modules.planes.index', ['planes' => $planes(), 'suscripcion' => request('con') ? $suscripcion() : null]);
+    });
+    Route::get('/suscripcion', function () use ($planes, $suscripcion) {
+        session()->forget('nivel');
+        return view('modules.suscripcion.mi-suscripcion', ['suscripcion' => $suscripcion(), 'planes' => $planes()]);
+    });
+    Route::get('/checkout/{id?}', function ($id = 3) use ($planes, $suscripcion, $metodos) {
+        session()->forget('nivel');
+        $plan = collect($planes())->firstWhere('id_plan', (int) $id) ?? $planes()[0];
+        return view('modules.suscripcion.checkout', [
+            'plan' => $plan, 'suscripcion' => $suscripcion(),
+            'metodos' => request('sin') ? [] : array_filter($metodos(), fn($m) => $m->estado === 'Activo'),
+        ]);
+    });
+    Route::get('/metodos', function () use ($metodos) {
+        session()->forget('nivel');
+        return view('modules.pagos.metodos', ['metodos' => request('sin') ? [] : $metodos()]);
+    });
+});
