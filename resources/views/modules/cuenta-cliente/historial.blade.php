@@ -2,7 +2,7 @@
 
 @section('title', 'Historial de pagos · Aetherix')
 
-@section('content')
+@section('contenido')
     <h2>Historial de pagos</h2>
     <table class="table">
         <thead>

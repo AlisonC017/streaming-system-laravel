@@ -42,7 +42,7 @@ class AuthController extends Controller
                 ->with('error', $this->mensajeSql($e));
         }
 
-        return redirect()->route('login')->with('exico', 'Cuenta Creada!');
+        return redirect()->route('login')->with('exito', 'Cuenta Creada!');
     }
 
     private function mensajeSql(QueryException $e): string
@@ -78,6 +78,15 @@ class AuthController extends Controller
         }
 
         $request->session()->regenerate();
+
+        $nivel = DB::table('administrador')
+            ->where('id_usuario', Auth::id())
+            ->value('nivel_acceso');
+
+        if ($nivel) {
+            session(['nivel' => $nivel]);
+            return redirect()->route('admin');
+        }
 
         return redirect()->intended(route('inicio'));
     }

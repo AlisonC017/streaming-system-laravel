@@ -26,7 +26,7 @@
         </p>
     </div>
 
-    <script src="{{ asset('theme/js/app.js') }}"></script>
+    
 </body>
 
 </html>

@@ -2106,3 +2106,21 @@ a.chip:hover {
 .pagination-wrap .pagination {
     margin: 0;
 }
+
+.pagination-wrap .pagination {
+    margin: 0;
+}
+/* Acceso al perfil en el header */
+.header-profile { display: inline-flex; align-items: center; gap: .55rem; text-decoration: none; }
+.header-avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    display: inline-grid; place-items: center;
+    background: linear-gradient(135deg, #8b5cf6, #6d3df0);
+    color: #fff; font-weight: 700; font-size: .85rem;
+}
+
+/* Alertas (partials/alertas) */
+.alerta { padding: .75rem 1rem; border-radius: 10px; margin-bottom: 1rem; font-size: .95rem; border: 1px solid transparent; }
+.alerta ul { margin: 0; padding-left: 1.1rem; }
+.alerta-exito { background: rgba(34,197,94,.12); border-color: rgba(34,197,94,.45); color: #86efac; }
+.alerta-error { background: rgba(239,68,68,.12); border-color: rgba(239,68,68,.45); color: #fca5a5; }

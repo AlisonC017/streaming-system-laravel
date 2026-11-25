@@ -2,7 +2,7 @@
 
 @section('title', 'Mi panel · Aetherix')
 
-@section('content')
+@section('contenido')
     @include('partials.alertas')
 
     @if (!$suscripcion)
