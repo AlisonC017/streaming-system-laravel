@@ -7,7 +7,7 @@
 
 ---
 
-## 🏗️ Arquitectura del Sistema
+## Arquitectura del Sistema
 
 El almacenamiento de datos se divide según la naturaleza operativa de cada módulo:
 
