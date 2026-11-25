@@ -20,14 +20,16 @@ Route::get('/reproductor', function () {
     return view('reproductor');
 })->name('reproductor.index');
 
-Route::get('/reproductor/{contenidoId}', [ReproductorController::class, 'mostrar'])
-    ->name('reproductor.mostrar');
+Route::middleware(['auth', 'pago.activo'])->group(function () {
+    Route::get('/reproductor/{contenidoId}', [ReproductorController::class, 'mostrar'])
+        ->name('reproductor.mostrar');
 
-Route::get('/reproductor/{contenidoId}/episodio/{episodioId}', [ReproductorController::class, 'mostrarEpisodio'])
-    ->name('reproductor.episodio');
+    Route::get('/reproductor/{contenidoId}/episodio/{episodioId}', [ReproductorController::class, 'mostrarEpisodio'])
+        ->name('reproductor.episodio');
 
-Route::post('/reproductor/fuentes', [ReproductorController::class, 'obtenerFuentes'])
-    ->name('reproductor.fuentes');
+    Route::post('/reproductor/fuentes', [ReproductorController::class, 'obtenerFuentes'])
+        ->name('reproductor.fuentes');
+});
 
 // Administracion de fuentes: protegidas hasta que exista autenticacion
 // Cuando haya login, cambiar 'solo.local' por ['auth', 'rol:admin']
@@ -145,7 +147,11 @@ Route::get('/demo/auditoria', function () {
 // papas
 //Prueba
 Route::view('/admin', 'modules.admin.dashboard', [
-    'suscripcionesActivas' => 0, 'ingresosMes' => 0, 'cobrosFallidos' => 0, 'cancelaciones' => 0, 'ultimosCobros' => [],
+    'suscripcionesActivas' => 0,
+    'ingresosMes' => 0,
+    'cobrosFallidos' => 0,
+    'cancelaciones' => 0,
+    'ultimosCobros' => [],
 ])->name('admin');
 
 Route::view('/admin/planes',   'modules.admin.planes',   ['planes' => []])->name('admin.planes');
@@ -162,8 +168,13 @@ Route::prefix('demo')->group(function () {
         (object) ['id_plan' => 3, 'nombre_plan' => 'Premium',  'precio' => 15.99, 'calidad' => '4K'],
     ];
     $suscripcion = fn() => request('sin') ? null : (object) [
-        'id_suscripcion' => 1, 'id_plan' => 2, 'nombre_plan' => 'Estandar', 'precio' => 10.99, 'calidad' => 'HD',
-        'fecha_inicio' => '2026-09-06', 'fecha_proximo_cobro' => '2026-12-04',
+        'id_suscripcion' => 1,
+        'id_plan' => 2,
+        'nombre_plan' => 'Estandar',
+        'precio' => 10.99,
+        'calidad' => 'HD',
+        'fecha_inicio' => '2026-09-06',
+        'fecha_proximo_cobro' => '2026-12-04',
         'estado' => request('estado', 'Activa'),
         'fecha_cancelacion' => request('estado') === 'Cancelada' ? '2026-11-20' : null,
         'ultimos4' => '1111',
@@ -184,7 +195,8 @@ Route::prefix('demo')->group(function () {
         session()->forget('nivel');
         $plan = collect($planes())->firstWhere('id_plan', (int) $id) ?? $planes()[0];
         return view('modules.suscripcion.checkout', [
-            'plan' => $plan, 'suscripcion' => $suscripcion(),
+            'plan' => $plan,
+            'suscripcion' => $suscripcion(),
             'metodos' => request('sin') ? [] : array_filter($metodos(), fn($m) => $m->estado === 'Activo'),
         ]);
     });
@@ -193,5 +205,3 @@ Route::prefix('demo')->group(function () {
         return view('modules.pagos.metodos', ['metodos' => request('sin') ? [] : $metodos()]);
     });
 });
-
-

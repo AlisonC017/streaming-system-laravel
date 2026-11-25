@@ -13,6 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'solo.local' => \App\Http\Middleware\SoloLocal::class,
+            'pago.activo' => \App\Http\Middleware\PagoActivo::class,
         ]);
     })
 
