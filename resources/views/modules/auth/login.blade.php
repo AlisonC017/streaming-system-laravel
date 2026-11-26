@@ -21,19 +21,18 @@
 
             <button class="btn btn-primary btn-lg btn-block">Ingresar</button>
 
-            <button type="button" class="btn btn-google btn-lg btn-block">Continuar con Google</button>
+            <a href="{{ route('google.redirect') }}" class="btn btn-google btn-lg btn-block">Continuar con Google</a>
         </form>
 
         <p class="auth-alt">¿No tienes cuenta? <a href="{{ route('register') }}">Regístrate</a></p>
     </div>
 
     <script>
-        document.querySelectorAll('[data-toggle-pass]').forEach(function(btn) {
-            btn.addEventListener('click', function() {
+        document.querySelectorAll('[data-toggle-pass]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
                 var input = document.getElementById(btn.dataset.togglePass);
                 input.type = input.type === 'password' ? 'text' : 'password';
             });
         });
     </script>
 @endsection
-

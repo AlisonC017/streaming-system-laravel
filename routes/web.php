@@ -11,6 +11,9 @@ use App\Http\Controllers\CuentaController;
 use App\Http\Controllers\AuditoriaController;
 use App\Http\Controllers\SuscripcionController;
 use App\Http\Controllers\MetodoPagoController;
+use App\Http\Controllers\GoogleAuthController;
+use App\http\Controllers\AdministradorController;
+use \App\Http\Controllers\AdminClientesController;
 
 // Inicio real 
 Route::get('/', [ContenidoController::class, 'obtenerTodos'])
@@ -84,6 +87,12 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::view('/registro', 'modules.auth.register')->name('register');
 Route::post('/registro', [AuthController::class, 'registrar'])->name('register.post');
 
+// Login con Google
+Route::get('/auth/google', [GoogleAuthController::class, 'redirigir'])->name('google.redirect');
+Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('google.callback');
+Route::get('/auth/google/completar', [GoogleAuthController::class, 'formularioCompletar'])->name('google.completar');
+Route::post('/auth/google/completar', [GoogleAuthController::class, 'completar'])->name('google.completar.post');
+
 // Planes: publico (se ve sin iniciar sesion)
 Route::get('/planes', [PlanController::class, 'index'])->name('planes');
 
@@ -107,13 +116,23 @@ Route::middleware(['auth', 'solo.cliente'])->group(function () {
         ->whereNumber('id')->name('pagos.metodos.eliminar');
 });
 
-// Rutas del dashboard 
-Route::view('/admin', 'modules.admin.dashboard')->name('admin');
+// Rutas del dashboard (solo administradores con sesion)
+Route::middleware(['auth', 'solo.admin'])->group(function () {
+    Route::view('/admin', 'modules.admin.dashboard', [
+        'suscripcionesActivas' => 0,
+        'ingresosMes' => 0,
+        'cobrosFallidos' => 0,
+        'cancelaciones' => 0,
+        'ultimosCobros' => [],
+    ])->name('admin');
 
-Route::view('/admin/cobros',   'modules.admin.cobros')->name('admin.cobros');
-Route::view('/admin/reportes', 'modules.admin.reportes')->name('admin.reportes');
-Route::view('/admin/usuarios', 'modules.admin.usuarios')->name('admin.usuarios');
-Route::get('/admin/auditoria', [AuditoriaController::class, 'index'])->name('admin.auditoria');
+    Route::view('/admin/planes',   'modules.admin.planes',   ['planes' => []])->name('admin.planes');
+    Route::view('/admin/cobros',   'modules.admin.cobros',   ['suscripciones' => [], 'cobros' => []])->name('admin.cobros');
+    Route::view('/admin/reportes', 'modules.admin.reportes', ['rendimiento' => []])->name('admin.reportes');
+    Route::get('/admin/usuarios', [AdminClientesController::class, 'index'])->name('admin.usuarios');
+    Route::get('/admin/administradores', [AdministradorController::class, 'index'])->name('admin.administradores');
+    Route::get('/admin/auditoria', [AuditoriaController::class, 'index'])->name('admin.auditoria');
+});
 
 // Rutas prueba logins
 // Rutas demo de CLIENTE: sin nivel
@@ -147,9 +166,6 @@ Route::get('/demo/admin', function () {
     return view('modules.admin.dashboard');
 });
 
-
-
-// Prueba
 Route::get('/demo/salir', function () {
     session()->forget('nivel');
     return redirect('/');
@@ -159,18 +175,3 @@ Route::get('/demo/auditoria', function () {
     session(['nivel' => 'Soporte']);
     return view('modules.admin.auditoria', ['registros' => []]);
 });
-
-// papas
-//Prueba
-Route::view('/admin', 'modules.admin.dashboard', [
-    'suscripcionesActivas' => 0,
-    'ingresosMes' => 0,
-    'cobrosFallidos' => 0,
-    'cancelaciones' => 0,
-    'ultimosCobros' => [],
-])->name('admin');
-
-Route::view('/admin/planes',   'modules.admin.planes',   ['planes' => []])->name('admin.planes');
-Route::view('/admin/cobros',   'modules.admin.cobros',   ['suscripciones' => [], 'cobros' => []])->name('admin.cobros');
-Route::view('/admin/reportes', 'modules.admin.reportes', ['rendimiento' => []])->name('admin.reportes');
-Route::view('/admin/usuarios', 'modules.admin.usuarios', ['clientes' => []])->name('admin.usuarios');

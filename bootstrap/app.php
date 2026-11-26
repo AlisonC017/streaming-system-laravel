@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'solo.local' => \App\Http\Middleware\SoloLocal::class,
             'pago.activo' => \App\Http\Middleware\PagoActivo::class,
             'solo.cliente' => \App\Http\Middleware\SoloCliente::class,
+            'solo.admin' => \App\Http\Middleware\SoloAdmin::class,
         ]);
     })
 
