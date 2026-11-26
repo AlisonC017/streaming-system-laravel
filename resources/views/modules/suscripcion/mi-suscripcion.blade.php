@@ -15,6 +15,9 @@
     $fecha = fn($f) => $f ? \Carbon\Carbon::parse($f)->format('d/m/Y') : '—';
     $urlCancelar = Route::has('suscripcion.cancelar') ? route('suscripcion.cancelar') : url('/suscripcion/cancelar');
     $urlMetodos = Route::has('pagos.metodos') ? route('pagos.metodos') : url('/pagos/metodos');
+    $urlPagar = $suscripcion && Route::has('suscripcion.checkout')
+        ? route('suscripcion.checkout', $suscripcion->id_plan)
+        : null;
 @endphp
 
 @section('contenido')
@@ -33,7 +36,7 @@
                 <p>
                     @switch($suscripcion->estado)
                         @case('Activa')
-                            Tu próximo cobro de ${{ number_format($suscripcion->precio, 2) }} es el {{ $fecha($suscripcion->fecha_proximo_cobro) }}.
+                            Tu próximo cobro de ₡{{ number_format($suscripcion->precio, 2) }} es el {{ $fecha($suscripcion->fecha_proximo_cobro) }}.
                         @break
                         @case('Pendiente')
                             Tu suscripción está pendiente del primer pago.
@@ -50,14 +53,17 @@
             @include('partials.badge-estado', ['estado' => $suscripcion->estado])
         </div>
 
-        @if ($suscripcion->estado === 'Suspendida')
-            <a class="btn btn-primary" href="{{ $urlMetodos }}">Actualizar método de pago</a>
+        @if (in_array($suscripcion->estado, ['Suspendida', 'Pendiente']) && $urlPagar)
+            <div>
+                <a class="btn btn-primary" href="{{ $urlPagar }}">Pagar ahora</a>
+                <a class="btn btn-ghost" href="{{ $urlMetodos }}">Administrar tarjetas</a>
+            </div>
         @endif
 
         <div class="atajos">
             <div class="cuenta-card">
                 <small>Precio</small>
-                <strong>${{ number_format($suscripcion->precio, 2) }} / mes</strong>
+                <strong>₡{{ number_format($suscripcion->precio, 2) }} / mes</strong>
             </div>
             <div class="cuenta-card">
                 <small>Miembro desde</small>

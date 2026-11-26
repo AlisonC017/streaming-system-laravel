@@ -7,6 +7,8 @@
     $suscripcion = $suscripcion ?? null;
     $vigente = $suscripcion && $suscripcion->estado !== 'Cancelada';
     $esActual = $vigente && $suscripcion->id_plan == $plan->id_plan;
+    $porPagar = $esActual && $suscripcion->estado !== 'Activa'; // Pendiente o Suspendida
+    $esAdmin = (bool) session('nivel');
     $urlCheckout = Route::has('suscripcion.checkout')
         ? route('suscripcion.checkout', $plan->id_plan)
         : url('/suscripcion/checkout/' . $plan->id_plan);
@@ -19,10 +21,15 @@
     </div>
 
     <div @class(['plan-card__precio'])>
-        ${{ number_format($plan->precio, 2) }} <small>/ mes</small>
+        ₡{{ number_format($plan->precio, 2) }} <small>/ mes</small>
     </div>
 
-    @if ($esActual)
+    @if ($esAdmin)
+        {{-- un administrador solo ve los planes, no se suscribe --}}
+    @elseif ($porPagar)
+        <span @class(['chip', 'chip--gold'])>Tu plan · {{ $suscripcion->estado }}</span>
+        <a @class(['btn', 'btn-primary', 'btn-sm']) href="{{ $urlCheckout }}">Pagar ahora</a>
+    @elseif ($esActual)
         <span @class(['chip', 'chip--gold'])>Tu plan actual</span>
         <a @class(['btn', 'btn-ghost', 'btn-sm']) aria-disabled="true">Plan actual</a>
     @elseif (!auth()->check())

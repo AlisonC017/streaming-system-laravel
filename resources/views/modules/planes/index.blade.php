@@ -13,6 +13,9 @@
             <header class="cuenta-head" style="margin-bottom:1.5rem">
                 <h1>Elige tu plan</h1>
                 <p>Cambia de plan o cancela cuando quieras. El cobro es mensual.</p>
+                @if (session('nivel'))
+                    <a class="btn btn-ghost btn-sm" href="{{ url('/admin/planes') }}">Gestionar planes</a>
+                @endif
             </header>
 
             @include('partials.alertas')

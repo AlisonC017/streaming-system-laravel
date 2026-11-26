@@ -9,9 +9,19 @@ class PlanController extends Controller
 {
      public function index()
     {
+        // si es cliente se marca su plan actual; un admin o un visitante solo ven los planes
+        $suscripcion = null;
+        if (auth()->check() && ! session('nivel')) {
+            try {
+                $suscripcion = SuscripcionController::delCliente(auth()->id());
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
+
         return view('modules.planes.index', [
             'planes' => self::listar(),
-            'suscripcion' => null, // TODO: cargar la suscripcion del cliente si hay sesion
+            'suscripcion' => $suscripcion,
         ]);
     }
 
