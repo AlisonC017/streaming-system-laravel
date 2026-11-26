@@ -9,6 +9,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PlanController;
 use App\Http\Controllers\CuentaController;
 use App\Http\Controllers\AuditoriaController;
+use App\Http\Controllers\GoogleAuthController;
 
 // Inicio real 
 Route::get('/', [ContenidoController::class, 'obtenerTodos'])
@@ -81,6 +82,12 @@ Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::view('/registro', 'modules.auth.register')->name('register');
 Route::post('/registro', [AuthController::class, 'registrar'])->name('register.post');
+
+// Login con Google
+Route::get('/auth/google', [GoogleAuthController::class, 'redirigir'])->name('google.redirect');
+Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('google.callback');
+Route::get('/auth/google/completar', [GoogleAuthController::class, 'formularioCompletar'])->name('google.completar');
+Route::post('/auth/google/completar', [GoogleAuthController::class, 'completar'])->name('google.completar.post');
 
 // Planes: publico (se ve sin iniciar sesion)
 Route::get('/planes', [PlanController::class, 'index'])->name('planes');

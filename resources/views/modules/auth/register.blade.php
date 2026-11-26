@@ -37,7 +37,7 @@
 
             <button class="btn btn-primary btn-lg btn-block">Crear cuenta</button>
 
-            <button type="button" class="btn btn-google btn-lg btn-block">Continuar con Google</button>
+            <a href="{{ route('google.redirect') }}" class="btn btn-google btn-lg btn-block">Continuar con Google</a>
 
         </form>
 
