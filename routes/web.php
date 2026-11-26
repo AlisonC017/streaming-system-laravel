@@ -137,4 +137,8 @@ Route::middleware(['auth', 'solo.admin'])->group(function () {
     Route::get('/admin/cobros', [AdminPanelController::class, 'cobros'])->name('admin.cobros');
     Route::get('/admin/reportes', [AdminPanelController::class, 'reportes'])->name('admin.reportes');
     Route::get('/admin/auditoria', [AuditoriaController::class, 'index'])->name('admin.auditoria');
+
+    Route::delete('/admin/planes/{id}', [AdminPanelController::class, 'planEliminar'])->whereNumber('id')->name('admin.planes.destroy');
+    Route::post('/admin/cobros/procesar', [AdminPanelController::class, 'cobroProcesar'])->name('admin.cobros.procesar');
+    Route::post('/admin/cobros/concurrencia', [AdminPanelController::class, 'cobroConcurrencia'])->name('admin.cobros.concurrencia');
 });

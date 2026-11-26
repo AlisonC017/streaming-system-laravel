@@ -4,9 +4,12 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Concerns\ErroresSql;
+use Illuminate\Support\Facades\Concurrency;
 
 class AdminPanelController extends Controller
 {
+    use ErroresSql;
 
     public function dashboard()
     {
@@ -105,17 +108,16 @@ class AdminPanelController extends Controller
 
     public function cancelarCuenta($id)
     {
-        abort_unless(session('nivel') === 'Total', 403);
+        abort_unless(in_array(session('nivel'), ['Total', 'Soporte'], true), 403);
 
         try {
-            $r = DB::select('EXEC sp_admin_cancelar_cuenta ?', [$id]);
-            $n = (int) ($r[0]->afectadas ?? 0);
+            DB::statement('EXEC sp_cancelar_cuenta_cliente ?, ?', [$id, 'Cancelada desde el panel de administración']);
         } catch (\Throwable $e) {
             report($e);
-            return back()->with('error', 'No se pudo cancelar la cuenta.');
+            return back()->with('error', $this->mensajeSql($e));
         }
 
-        return back()->with('status', $n > 0 ? 'Cuenta cancelada.' : 'El cliente no tenía suscripciones activas.');
+        return back()->with('status', 'Cuenta cancelada.');
     }
 
     public function administradores(Request $request)
@@ -255,15 +257,105 @@ class AdminPanelController extends Controller
     public function reportes(Request $request)
     {
         try {
-            $rendimiento = collect(DB::select('EXEC sp_admin_reporte_planes ?, ?', [
+            $rendimiento = collect(DB::select('EXEC sp_reporte_rendimiento_planes ?, ?', [
                 $request->input('desde'),
                 $request->input('hasta'),
             ]));
         } catch (\Throwable $e) {
             report($e);
             $rendimiento = collect();
+            session()->now('error', $this->mensajeSql($e));
         }
 
         return view('modules.admin.reportes', ['rendimiento' => $rendimiento]);
+    }
+
+    public function planEliminar(Request $request, $id)
+    {
+        abort_unless(session('nivel') === 'Total', 403);
+
+        $d = $request->validate(['id_plan_destino' => 'required|integer']);
+
+        try {
+            DB::statement('EXEC sp_descontinuar_y_migrar_plan ?, ?', [$id, $d['id_plan_destino']]);
+        } catch (\Throwable $e) {
+            report($e);
+            return back()->with('error', $this->mensajeSql($e));
+        }
+
+        return redirect()->route('admin.planes')
+            ->with('status', 'Plan descontinuado y suscripciones migradas.');
+    }
+
+    public function cobroProcesar(Request $request)
+    {
+        abort_unless(session('nivel') === 'Total', 403);
+
+        $d = $request->validate(['id_suscripcion' => 'required|integer']);
+
+        try {
+            $idMetodo = $this->metodoDeSuscripcion((int) $d['id_suscripcion']);
+            if (! $idMetodo) {
+                return back()->with('error', 'El cliente no tiene una tarjeta activa.');
+            }
+
+            DB::statement('EXEC sp_procesar_cobro_suscripcion ?, ?', [$d['id_suscripcion'], $idMetodo]);
+        } catch (\Throwable $e) {
+            report($e);
+            return back()->with('error', $this->mensajeSql($e));
+        }
+
+        $estado = DB::table('suscripcion')->where('id_suscripcion', $d['id_suscripcion'])->value('estado');
+
+        return redirect()->route('admin.cobros')
+            ->with('status', "Cobro procesado. Estado de la suscripción: {$estado}.");
+    }
+
+    public function cobroConcurrencia(Request $request)
+    {
+        abort_unless(session('nivel') === 'Total', 403);
+
+        $d = $request->validate(['id_suscripcion' => 'required|integer']);
+        $id = (int) $d['id_suscripcion'];
+
+        $idMetodo = $this->metodoDeSuscripcion($id);
+        if (! $idMetodo) {
+            return back()->with('error', 'El cliente no tiene una tarjeta activa.');
+        }
+
+        $cobrar = function (int $n) use ($id, $idMetodo) {
+            try {
+                DB::statement('EXEC sp_procesar_cobro_suscripcion ?, ?', [$id, $idMetodo]);
+                return "Cobro {$n}: realizado";
+            } catch (\Throwable $e) {
+                $msg = preg_match('/\[SQL Server\](.*?)\s*\(Connection:/s', $e->getMessage(), $m)
+                    ? trim($m[1]) : 'error';
+                return "Cobro {$n}: rechazado ({$msg})";
+            }
+        };
+
+        // Dos procesos PHP distintos, cada uno con su propia conexión a SQL Server
+        $resultado = Concurrency::run([
+            fn() => $cobrar(1),
+            fn() => $cobrar(2),
+        ]);
+
+        return $this->cobros()->with('resultadoConcurrencia', $resultado);
+    }
+
+    private function metodoDeSuscripcion(int $idSuscripcion): ?int
+    {
+        $idUsuario = DB::table('suscripcion')->where('id_suscripcion', $idSuscripcion)->value('id_usuario');
+        if (! $idUsuario) {
+            return null;
+        }
+
+        foreach (DB::select('EXEC sp_listar_metodos_cliente ?', [$idUsuario]) as $m) {
+            if ($m->estado === 'Activo') {
+                return (int) $m->id_metodo;
+            }
+        }
+
+        return null;
     }
 }

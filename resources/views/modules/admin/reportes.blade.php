@@ -10,7 +10,8 @@
                 <label for="desde" class="mr-2">Desde</label>
                 <input type="date" class="form-control mr-3" id="desde" name="desde" value="{{ request('desde') }}">
                 <label for="hasta" class="mr-2">Hasta</label>
-                <input type="date" class="form-control mr-3" id="hasta" name="hasta" value="{{ request('hasta') }}">
+                <input type="date" class="form-control mr-3" id="hasta" name="hasta"
+                    value="{{ request('hasta') }}">
                 <button type="submit" class="btn btn-primary btn-sm">Filtrar</button>
             </form>
         </div>
@@ -40,22 +41,26 @@
                         <table class="table tablesorter">
                             <thead class="text-primary">
                                 <tr>
+                                    <th>País</th>
                                     <th>Plan</th>
-                                    <th>Suscriptores</th>
+                                    <th>Suscripciones</th>
                                     <th>Ingresos</th>
-                                    <th>Cancelaciones</th>
+                                    <th>Cobros fallidos</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse ($rendimiento as $r)
                                     <tr>
-                                        <td>{{ $r->plan }}</td>
-                                        <td>{{ number_format($r->suscriptores) }}</td>
-                                        <td>${{ number_format($r->ingresos, 2) }}</td>
-                                        <td>{{ $r->cancelaciones }}</td>
+                                        <td>{{ $r->Pais }}</td>
+                                        <td>{{ $r->planStreaming }}</td>
+                                        <td>{{ number_format($r->totalSuscripciones) }}</td>
+                                        <td>${{ number_format($r->totalIngresos, 2) }}</td>
+                                        <td>{{ $r->cobrosFallidos }}</td>
                                     </tr>
                                 @empty
-                                    <tr><td colspan="4">No hay datos para el período elegido.</td></tr>
+                                    <tr>
+                                        <td colspan="5">No hay datos para el período elegido.</td>
+                                    </tr>
                                 @endforelse
                             </tbody>
                         </table>
@@ -66,18 +71,25 @@
     </div>
 @endsection
 
+@php
+    $porPlan = collect($rendimiento)->groupBy('planStreaming')->map(fn($g) => $g->sum('totalIngresos'));
+@endphp
+
 @section('scripts')
     <script>
-        if (Chart.defaults.global) { Chart.defaults.global.defaultFontColor = '#9a9a9a'; }
-        else { Chart.defaults.color = '#9a9a9a'; }
+        if (Chart.defaults.global) {
+            Chart.defaults.global.defaultFontColor = '#9a9a9a';
+        } else {
+            Chart.defaults.color = '#9a9a9a';
+        }
 
         new Chart(document.getElementById('graficoIngresos'), {
             type: 'bar',
             data: {
-                labels: @json(collect($rendimiento)->pluck('plan')),
+                labels: @json($porPlan->keys()->values()),
                 datasets: [{
                     label: 'Ingresos ($)',
-                    data: @json(collect($rendimiento)->pluck('ingresos')),
+                    data: @json($porPlan->values()->map(fn($v) => round((float) $v, 2))),
                     backgroundColor: '#a78bfa'
                 }]
             }

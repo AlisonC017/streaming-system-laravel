@@ -4,6 +4,7 @@
 @section('titulo_pagina', 'Gestión de Planes')
 
 @section('contenido')
+    @include('modules.admin._mensajes')
     <div class="row">
         <div class="col-md-12">
             <div class="card">
@@ -11,7 +12,8 @@
                     <h4 class="card-title">Planes Activos</h4>
 
                     @if (session('nivel') === 'Total')
-                        <button class="btn btn-primary btn-sm">+ Nuevo Plan</button>
+                        <button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#modalPlan">+ Nuevo
+                            Plan</button>
                     @endif
                 </div>
                 <div class="card-body">
@@ -35,10 +37,24 @@
                                         <td>{{ $plan->calidad }}</td>
                                         @if (session('nivel') === 'Total')
                                             <td class="text-right">
-                                                <a href="#" class="btn btn-info btn-sm">Editar</a>
-                                                <form method="POST" action="#" class="d-inline"
-                                                    onsubmit="return confirm('¿Descontinuar el plan {{ $plan->nombre_plan }}?')">
+                                                <a href="{{ route('admin.planes.edit', $plan->id_plan) }}"
+                                                    class="btn btn-info btn-sm">Editar</a>
+                                                <form method="POST"
+                                                    action="{{ route('admin.planes.destroy', $plan->id_plan) }}"
+                                                    class="d-inline"
+                                                    onsubmit="return confirm('¿Descontinuar {{ $plan->nombre_plan }}? Sus suscripciones pasarán al plan elegido.')">
                                                     @csrf
+                                                    @method('DELETE')
+                                                    <select name="id_plan_destino"
+                                                        class="form-control form-control-sm d-inline w-auto" required>
+                                                        <option value="">Migrar a...</option>
+                                                        @foreach ($planes as $otro)
+                                                            @if ($otro->id_plan != $plan->id_plan)
+                                                                <option value="{{ $otro->id_plan }}">
+                                                                    {{ $otro->nombre_plan }}</option>
+                                                            @endif
+                                                        @endforeach
+                                                    </select>
                                                     <button type="submit"
                                                         class="btn btn-danger btn-sm">Descontinuar</button>
                                                 </form>
@@ -64,7 +80,7 @@
             aria-hidden="true">
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
-                    <form method="POST" action="#">
+                    <form method="POST" action="{{ route('admin.planes.store') }}">
                         @csrf
                         <div class="modal-header">
                             <h5 class="modal-title" id="modalPlanTitulo">Nuevo plan</h5>
@@ -98,5 +114,5 @@
                 </div>
             </div>
         </div>
-        @endif
-    @endsection
+    @endif
+@endsection

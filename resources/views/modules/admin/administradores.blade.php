@@ -33,6 +33,7 @@
                             <th>Correo</th>
                             <th>Nivel de acceso</th>
                             <th>Estado</th>
+                            <th class="text-right">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -41,9 +42,15 @@
                                 <td>{{ $a->nombre }} {{ $a->apellidos }}</td>
                                 <td>{{ $a->correo }}</td>
                                 <td><span
-                                        class="badge badge-{{ match ($a->nivel_acceso) { 'Total' => 'success', 'Soporte' => 'info', 'Contenido' => 'warning', default => 'secondary'} }}">{{ $a->nivel_acceso }}</span>
+                                        class="badge badge-{{ match ($a->nivel_acceso) {'Total' => 'success','Soporte' => 'info','Contenido' => 'warning',default => 'secondary'} }}">{{ $a->nivel_acceso }}</span>
                                 </td>
                                 <td>{{ $a->estado }}</td>
+                                <td class="text-right">
+                                    @if (session('nivel') === 'Total')
+                                        <a href="{{ route('admin.administradores.edit', $a->id_usuario) }}"
+                                            class="btn btn-sm btn-info">Editar</a>
+                                    @endif
+                                </td>
                             </tr>
                         @empty
                             <tr>

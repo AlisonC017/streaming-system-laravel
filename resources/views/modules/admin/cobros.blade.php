@@ -4,6 +4,7 @@
 @section('titulo_pagina', 'Cobros')
 
 @section('contenido')
+    @include('modules.admin._mensajes')
     <div class="row">
         <div class="col-lg-6">
             <div class="card">
@@ -12,13 +13,14 @@
                     <p class="card-category">Fuerza el cobro de una suscripción para demostrar el proceso.</p>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="#">
+                    <form method="POST" action="{{ route('admin.cobros.procesar') }}">
                         @csrf
                         <div class="form-group">
                             <label for="id_suscripcion">Suscripción</label>
                             <select class="form-control" id="id_suscripcion" name="id_suscripcion" required>
                                 @foreach ($suscripciones as $s)
-                                    <option value="{{ $s->id_suscripcion }}">{{ $s->cliente }} · {{ $s->plan }}</option>
+                                    <option value="{{ $s->id_suscripcion }}">{{ $s->cliente }} · {{ $s->plan }}
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
@@ -35,13 +37,14 @@
                     <p class="card-category">Dos cobros simultáneos sobre la misma suscripción.</p>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="#">
+                    <form method="POST" action="{{ route('admin.cobros.concurrencia') }}">
                         @csrf
                         <div class="form-group">
                             <label for="id_suscripcion_conc">Suscripción</label>
                             <select class="form-control" id="id_suscripcion_conc" name="id_suscripcion" required>
                                 @foreach ($suscripciones as $s)
-                                    <option value="{{ $s->id_suscripcion }}">{{ $s->cliente }} · {{ $s->plan }}</option>
+                                    <option value="{{ $s->id_suscripcion }}">{{ $s->cliente }} · {{ $s->plan }}
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
@@ -86,7 +89,7 @@
                                 <td>${{ number_format($c->monto, 2) }}</td>
                                 <td>{{ $c->fecha_pago }}</td>
                                 <td><span
-                                        class="badge badge-{{ match ($c->estado) { 'Exitoso' => 'success', 'Pendiente' => 'warning', 'Fallido' => 'danger', default => 'info'} }}">{{ $c->estado }}</span>
+                                        class="badge badge-{{ match ($c->estado) {'Exitoso' => 'success','Pendiente' => 'warning','Fallido' => 'danger',default => 'info'} }}">{{ $c->estado }}</span>
                                 </td>
                             </tr>
                         @empty
