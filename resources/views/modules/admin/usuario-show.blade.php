@@ -19,7 +19,8 @@
                     <p><strong>Estado de la cuenta:</strong> {{ $cliente->estado }}</p>
                     <p><strong>Registro:</strong> {{ $cliente->fecha_registro }}</p>
                     @if (session('nivel') === 'Total')
-                        <a href="{{ route('admin.usuarios.edit', $cliente->id_usuario) }}" class="btn btn-info btn-sm">Editar</a>
+                        <a href="{{ route('admin.usuarios.edit', $cliente->id_usuario) }}"
+                            class="btn btn-info btn-sm">Editar</a>
                     @endif
                     <a href="{{ route('admin.usuarios') }}" class="btn btn-secondary btn-sm">Volver</a>
                 </div>
@@ -33,13 +34,11 @@
                 </div>
                 <div class="card-body">
                     @if ($cliente->id_suscripcion)
-                        <p><strong>Plan:</strong> {{ $cliente->plan }} ({{ $cliente->calidad }}) · ${{ number_format($cliente->precio, 2) }}</p>
+                        <p><strong>Plan:</strong> {{ $cliente->plan_actual }} ·
+                            ₡{{ number_format($cliente->precio_plan, 2) }}</p>
                         <p><strong>Estado:</strong> {{ $cliente->estado_suscripcion }}</p>
                         <p><strong>Inicio:</strong> {{ $cliente->fecha_inicio }}</p>
                         <p><strong>Próximo cobro:</strong> {{ $cliente->fecha_proximo_cobro }}</p>
-                        @if ($cliente->fecha_cancelacion)
-                            <p><strong>Cancelada el:</strong> {{ $cliente->fecha_cancelacion }}</p>
-                        @endif
                     @else
                         <p class="mb-0">Este cliente no tiene suscripción.</p>
                     @endif
@@ -58,7 +57,11 @@
                     <div class="table-responsive">
                         <table class="table tablesorter">
                             <thead class="text-primary">
-                                <tr><th>Tarjeta</th><th>Vence</th><th>Estado</th></tr>
+                                <tr>
+                                    <th>Tarjeta</th>
+                                    <th>Vence</th>
+                                    <th>Estado</th>
+                                </tr>
                             </thead>
                             <tbody>
                                 @forelse ($metodos as $m)
@@ -68,7 +71,9 @@
                                         <td>{{ $m->estado }}</td>
                                     </tr>
                                 @empty
-                                    <tr><td colspan="3">Sin métodos de pago.</td></tr>
+                                    <tr>
+                                        <td colspan="3">Sin métodos de pago.</td>
+                                    </tr>
                                 @endforelse
                             </tbody>
                         </table>
@@ -86,19 +91,29 @@
                     <div class="table-responsive">
                         <table class="table tablesorter">
                             <thead class="text-primary">
-                                <tr><th>#</th><th>Monto</th><th>Fecha</th><th>Tarjeta</th><th>Estado</th></tr>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Monto</th>
+                                    <th>Fecha</th>
+                                    <th>Tarjeta</th>
+                                    <th>Estado</th>
+                                </tr>
                             </thead>
                             <tbody>
                                 @forelse ($pagos as $p)
                                     <tr>
                                         <td>{{ $p->id_pago }}</td>
-                                        <td>${{ number_format($p->monto, 2) }}</td>
+                                        <td>₡{{ number_format($p->monto, 2) }}</td>
                                         <td>{{ $p->fecha_pago }}</td>
                                         <td>{{ $p->ultimos4 ? '**** ' . $p->ultimos4 : '—' }}</td>
-                                        <td><span class="badge badge-{{ $p->estado === 'Exitoso' ? 'success' : 'danger' }}">{{ $p->estado }}</span></td>
+                                        <td><span
+                                                class="badge badge-{{ $p->estado === 'Exitoso' ? 'success' : 'danger' }}">{{ $p->estado }}</span>
+                                        </td>
                                     </tr>
                                 @empty
-                                    <tr><td colspan="5">Sin pagos registrados.</td></tr>
+                                    <tr>
+                                        <td colspan="5">Sin pagos registrados.</td>
+                                    </tr>
                                 @endforelse
                             </tbody>
                         </table>

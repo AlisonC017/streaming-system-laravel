@@ -13,7 +13,6 @@ class AdminPanelController extends Controller
 
     public function dashboard()
     {
-
         $datos = [
             'suscripcionesActivas' => 0,
             'ingresosMes' => 0,
@@ -21,13 +20,6 @@ class AdminPanelController extends Controller
             'cancelaciones' => 0,
             'ultimosCobros' => collect(),
         ];
-
-        if (session('nivel') === 'Contenido') {
-            $datos['ultimosCobros'] = $datos['ultimosCobros']->map(function ($c, $i) {
-                $c->cliente = 'Cliente #' . ($i + 1);
-                return $c;
-            });
-        }
 
         try {
             $r = DB::select('EXEC sp_admin_resumen')[0] ?? null;
@@ -40,6 +32,13 @@ class AdminPanelController extends Controller
             $datos['ultimosCobros'] = collect(DB::select('EXEC sp_admin_cobros ?', [10]));
         } catch (\Throwable $e) {
             report($e);
+        }
+
+        if (session('nivel') === 'Contenido') {
+            $datos['ultimosCobros'] = $datos['ultimosCobros']->values()->map(function ($c, $i) {
+                $c->cliente = 'Cliente #' . ($c->id_suscripcion ?? ($i + 1));
+                return $c;
+            });
         }
 
         return view('modules.admin.dashboard', $datos);
@@ -168,7 +167,7 @@ class AdminPanelController extends Controller
     {
         abort_unless(session('nivel') === 'Total', 403);
 
-        if ((int) $id === (int) auth()->id()) {
+        if ((int) $id === (int) $request->user()->id_usuario) {
             return back()->with('error', 'No podés cambiar tu propio nivel ni tu estado.');
         }
 
@@ -259,7 +258,10 @@ class AdminPanelController extends Controller
         abort_unless(in_array(session('nivel'), ['Total', 'Soporte'], true), 403);
 
         try {
-            $suscripciones = collect(DB::select('EXEC sp_admin_suscripciones'));
+            // solo suscripciones que se pueden cobrar
+            $suscripciones = collect(DB::select('EXEC sp_admin_suscripciones'))
+                ->filter(fn($s) => ($s->estado ?? null) !== 'Cancelada')
+                ->values();
             $cobros = collect(DB::select('EXEC sp_admin_cobros ?', [50]));
         } catch (\Throwable $e) {
             report($e);
@@ -267,15 +269,24 @@ class AdminPanelController extends Controller
             $cobros = collect();
         }
 
-        return view('modules.admin.cobros', ['suscripciones' => $suscripciones, 'cobros' => $cobros]);
+        $hoy = now('America/Costa_Rica')->toDateString();
+        $porCobrar = $suscripciones
+            ->filter(fn($s) => isset($s->fecha_proximo_cobro) && substr((string) $s->fecha_proximo_cobro, 0, 10) <= $hoy)
+            ->values();
+
+        return view('modules.admin.cobros', [
+            'suscripciones' => $suscripciones,
+            'porCobrar' => $porCobrar,
+            'cobros' => $cobros,
+        ]);
     }
 
     public function reportes(Request $request)
     {
         try {
             $rendimiento = collect(DB::select('EXEC sp_reporte_rendimiento_planes ?, ?', [
-                $request->input('desde'),
-                $request->input('hasta'),
+                $request->input('desde') ?: null,
+                $request->input('hasta') ?: null,
             ]));
         } catch (\Throwable $e) {
             report($e);

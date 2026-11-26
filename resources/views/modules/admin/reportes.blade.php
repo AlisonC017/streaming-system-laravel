@@ -8,10 +8,11 @@
         <div class="card-body">
             <form method="GET" class="form-inline">
                 <label for="desde" class="mr-2">Desde</label>
-                <input type="date" class="form-control mr-3" id="desde" name="desde" value="{{ request('desde') }}">
+                <input type="date" class="form-control mr-3" id="desde" name="desde"
+                    value="{{ request('desde', now()->subMonth()->toDateString()) }}">
                 <label for="hasta" class="mr-2">Hasta</label>
                 <input type="date" class="form-control mr-3" id="hasta" name="hasta"
-                    value="{{ request('hasta') }}">
+                    value="{{ request('hasta', now()->toDateString()) }}">
                 <button type="submit" class="btn btn-primary btn-sm">Filtrar</button>
             </form>
         </div>
@@ -54,7 +55,7 @@
                                         <td>{{ $r->Pais }}</td>
                                         <td>{{ $r->planStreaming }}</td>
                                         <td>{{ number_format($r->totalSuscripciones) }}</td>
-                                        <td>${{ number_format($r->totalIngresos, 2) }}</td>
+                                        <td>₡{{ number_format($r->totalIngresos, 2) }}</td>
                                         <td>{{ $r->cobrosFallidos }}</td>
                                     </tr>
                                 @empty
@@ -88,7 +89,7 @@
             data: {
                 labels: @json($porPlan->keys()->values()),
                 datasets: [{
-                    label: 'Ingresos ($)',
+                    label: 'Ingresos (₡)',
                     data: @json($porPlan->values()->map(fn($v) => round((float) $v, 2))),
                     backgroundColor: '#a78bfa'
                 }]

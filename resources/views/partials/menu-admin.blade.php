@@ -36,6 +36,7 @@
             </li>
 
             <!-- Solo Total y Soporte -->
+            <!-- Solo Total y Soporte -->
             @if (in_array(session('nivel'), ['Total', 'Soporte']))
                 <li class="{{ request()->is('admin/usuarios*') ? 'active' : '' }}">
                     <a href="{{ url('/admin/usuarios') }}">
@@ -43,16 +44,16 @@
                         <p>Clientes</p>
                     </a>
                 </li>
-            @endif
-
-            <!-- Solo Total -->
-            @if (session('nivel') === 'Total')
                 <li class="{{ request()->is('admin/cobros*') ? 'active' : '' }}">
                     <a href="{{ url('/admin/cobros') }}">
                         <i class="tim-icons icon-coins"></i>
                         <p>Cobros</p>
                     </a>
                 </li>
+            @endif
+
+            <!-- Solo Total -->
+            @if (session('nivel') === 'Total')
                 <li class="{{ request()->is('admin/administradores*') ? 'active' : '' }}">
                     <a href="{{ url('/admin/administradores') }}">
                         <i class="tim-icons icon-badge"></i>
