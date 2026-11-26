@@ -33,7 +33,7 @@
                                 @forelse ($planes as $plan)
                                     <tr>
                                         <td>{{ $plan->nombre_plan }}</td>
-                                        <td>${{ number_format($plan->precio, 2) }}</td>
+                                        <td>₡{{ number_format($plan->precio, 2) }}</td>
                                         <td>{{ $plan->calidad }}</td>
                                         @if (session('nivel') === 'Total')
                                             <td class="text-right">

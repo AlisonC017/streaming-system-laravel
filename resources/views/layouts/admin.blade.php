@@ -4,6 +4,37 @@
 <!DOCTYPE html>
 <html lang="es">
 
+<style>
+    /* Foto de perfil */
+    .navbar .photo {
+        width: 46px !important;
+        height: 46px !important;
+        border-radius: 50% !important;
+        overflow: hidden;
+    }
+
+    .navbar .photo img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover;
+    }
+
+    .navbar .badge {
+        font-size: 12px !important;
+        padding: 7px 12px !important;
+    }
+
+    /* Alinear todo verticalmente */
+    .navbar .navbar-nav {
+        align-items: center;
+    }
+
+    .navbar .dropdown-toggle {
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+    }
+</style>
+
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no" />

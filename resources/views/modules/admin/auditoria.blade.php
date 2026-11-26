@@ -34,6 +34,7 @@
                                     <th>#</th>
                                     <th>Fecha</th>
                                     <th>Tabla</th>
+                                    <th>Operación</th>
                                     <th>Descripción</th>
                                     <th>Usuario BD</th>
                                 </tr>
@@ -44,6 +45,7 @@
                                         <td>{{ $r->id_aud }}</td>
                                         <td>{{ $r->fecha }}</td>
                                         <td>{{ $r->tabla }}</td>
+                                        <td>{{ $r->operacion }}</td>
                                         <td>{{ $r->descripcion }}</td>
                                         <td>{{ $r->usuario_bd }}</td>
                                     </tr>

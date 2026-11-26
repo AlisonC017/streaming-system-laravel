@@ -20,7 +20,7 @@
                 <div class="card-header">
                     <h5 class="card-category">Ingresos del mes</h5>
                     <h3 class="card-title"><i class="tim-icons icon-coins text-primary"></i>
-                        ${{ number_format($ingresosMes, 2) }}</h3>
+                        ₡{{ number_format($ingresosMes, 2) }}</h3>
                 </div>
             </div>
         </div>
@@ -65,7 +65,7 @@
                             <tr>
                                 <td>{{ $c->cliente }}</td>
                                 <td>{{ $c->plan }}</td>
-                                <td>${{ number_format($c->monto, 2) }}</td>
+                                <td>₡{{ number_format($c->monto, 2) }}</td>
                                 <td><span
                                         class="badge badge-{{ match ($c->estado) { 'Exitoso' => 'success', 'Pendiente' => 'warning', 'Fallido' => 'danger', default => 'info'} }}">{{ $c->estado }}</span>
                                 </td>
