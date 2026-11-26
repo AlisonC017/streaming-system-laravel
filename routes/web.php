@@ -12,8 +12,7 @@ use App\Http\Controllers\AuditoriaController;
 use App\Http\Controllers\SuscripcionController;
 use App\Http\Controllers\MetodoPagoController;
 use App\Http\Controllers\GoogleAuthController;
-use App\Http\Controllers\AdministradorController;
-use App\Http\Controllers\AdminClientesController;
+use App\Http\Controllers\AdminPanelController;
 
 // Inicio real
 Route::get('/', [ContenidoController::class, 'obtenerTodos'])
@@ -114,18 +113,28 @@ Route::middleware(['auth', 'solo.cliente'])->group(function () {
 
 // Rutas del dashboard (solo administradores con sesion)
 Route::middleware(['auth', 'solo.admin'])->group(function () {
-    Route::view('/admin', 'modules.admin.dashboard', [
-        'suscripcionesActivas' => 0,
-        'ingresosMes' => 0,
-        'cobrosFallidos' => 0,
-        'cancelaciones' => 0,
-        'ultimosCobros' => [],
-    ])->name('admin');
+    Route::get('/admin', [AdminPanelController::class, 'dashboard'])->name('admin');
 
-    Route::view('/admin/planes',   'modules.admin.planes',   ['planes' => []])->name('admin.planes');
-    Route::view('/admin/cobros',   'modules.admin.cobros',   ['suscripciones' => [], 'cobros' => []])->name('admin.cobros');
-    Route::view('/admin/reportes', 'modules.admin.reportes', ['rendimiento' => []])->name('admin.reportes');
-    Route::get('/admin/usuarios', [AdminClientesController::class, 'index'])->name('admin.usuarios');
-    Route::get('/admin/administradores', [AdministradorController::class, 'index'])->name('admin.administradores');
+    // Clientes
+    Route::get('/admin/usuarios', [AdminPanelController::class, 'usuarios'])->name('admin.usuarios');
+    Route::get('/admin/usuarios/{id}', [AdminPanelController::class, 'usuarioShow'])->whereNumber('id')->name('admin.usuarios.show');
+    Route::get('/admin/usuarios/{id}/editar', [AdminPanelController::class, 'usuarioEdit'])->whereNumber('id')->name('admin.usuarios.edit');
+    Route::put('/admin/usuarios/{id}', [AdminPanelController::class, 'usuarioUpdate'])->whereNumber('id')->name('admin.usuarios.update');
+    Route::post('/admin/usuarios/{id}/cancelar', [AdminPanelController::class, 'cancelarCuenta'])->whereNumber('id')->name('admin.usuarios.cancelar');
+
+    // Administradores
+    Route::get('/admin/administradores', [AdminPanelController::class, 'administradores'])->name('admin.administradores');
+    Route::get('/admin/administradores/{id}/editar', [AdminPanelController::class, 'administradorEdit'])->whereNumber('id')->name('admin.administradores.edit');
+    Route::put('/admin/administradores/{id}', [AdminPanelController::class, 'administradorUpdate'])->whereNumber('id')->name('admin.administradores.update');
+
+    // Planes
+    Route::get('/admin/planes', [AdminPanelController::class, 'planes'])->name('admin.planes');
+    Route::post('/admin/planes', [AdminPanelController::class, 'planStore'])->name('admin.planes.store');
+    Route::get('/admin/planes/{id}/editar', [AdminPanelController::class, 'planEdit'])->whereNumber('id')->name('admin.planes.edit');
+    Route::put('/admin/planes/{id}', [AdminPanelController::class, 'planUpdate'])->whereNumber('id')->name('admin.planes.update');
+
+    // Cobros, reportes, auditoria
+    Route::get('/admin/cobros', [AdminPanelController::class, 'cobros'])->name('admin.cobros');
+    Route::get('/admin/reportes', [AdminPanelController::class, 'reportes'])->name('admin.reportes');
     Route::get('/admin/auditoria', [AuditoriaController::class, 'index'])->name('admin.auditoria');
 });
