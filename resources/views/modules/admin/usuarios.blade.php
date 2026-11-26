@@ -43,13 +43,16 @@
                                 <td>{{ $c->nombre }}</td>
                                 <td>{{ $c->correo }}</td>
                                 <td>{{ $c->plan }}</td>
-                                <td><span class="badge badge-{{ match ($c->estado) { 'Activa' => 'success', 'Pendiente' => 'warning', 'Cancelada' => 'danger', default => 'info' } }}">{{ $c->estado }}</span></td>
+                                <td><span
+                                        class="badge badge-{{ match ($c->estado) { 'Activa' => 'success', 'Pendiente' => 'warning', 'Cancelada' => 'danger', default => 'info'} }}">{{ $c->estado }}</span>
+                                </td>
                                 <td>{{ $c->fecha_registro }}</td>
                                 <td class="text-right">
                                     <a href="#" class="btn btn-sm btn-primary">Ver</a>
                                     @if ($c->estado !== 'Cancelada')
-                                        <form method="POST" action="#" class="d-inline"
-                                            onsubmit="return confirm('¿Cancelar la cuenta de {{ $c->nombre }}?')">
+
+                                        <form method="POST" action="{{ route('admin.usuarios.cancelar', $c->id_usuario) }}"
+                                            class="d-inline" onsubmit="return confirm('¿Cancelar la cuenta de {{ $c->nombre }}?')">
                                             @csrf
                                             <button type="submit" class="btn btn-sm btn-danger">Cancelar cuenta</button>
                                         </form>
@@ -57,7 +60,9 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="6">No se encontraron clientes.</td></tr>
+                            <tr>
+                                <td colspan="6">No se encontraron clientes.</td>
+                            </tr>
                         @endforelse
                     </tbody>
                 </table>

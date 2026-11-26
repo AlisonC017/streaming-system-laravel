@@ -85,10 +85,14 @@
                                 <td>{{ $c->plan }}</td>
                                 <td>${{ number_format($c->monto, 2) }}</td>
                                 <td>{{ $c->fecha_pago }}</td>
-                                <td><span class="badge badge-{{ match ($c->estado) { 'Pagado' => 'success', 'Pendiente' => 'warning', 'Fallido' => 'danger', default => 'info' } }}">{{ $c->estado }}</span></td>
+                                <td><span
+                                        class="badge badge-{{ match ($c->estado) { 'Exitoso' => 'success', 'Pendiente' => 'warning', 'Fallido' => 'danger', default => 'info'} }}">{{ $c->estado }}</span>
+                                </td>
                             </tr>
                         @empty
-                            <tr><td colspan="6">Aún no hay cobros registrados.</td></tr>
+                            <tr>
+                                <td colspan="6">Aún no hay cobros registrados.</td>
+                            </tr>
                         @endforelse
                     </tbody>
                 </table>
