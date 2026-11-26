@@ -34,8 +34,8 @@
                 </div>
                 <div class="card-body">
                     @if ($cliente->id_suscripcion)
-                        <p><strong>Plan:</strong> {{ $cliente->plan_actual }} ·
-                            ₡{{ number_format($cliente->precio_plan, 2) }}</p>
+                        <p><strong>Plan:</strong> {{ $cliente->plan ?? 'Sin plan' }} ·
+                            ₡{{ number_format($cliente->precio ?? 0, 2) }}</p>
                         <p><strong>Estado:</strong> {{ $cliente->estado_suscripcion }}</p>
                         <p><strong>Inicio:</strong> {{ $cliente->fecha_inicio }}</p>
                         <p><strong>Próximo cobro:</strong> {{ $cliente->fecha_proximo_cobro }}</p>

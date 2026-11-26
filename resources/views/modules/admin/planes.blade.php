@@ -91,18 +91,21 @@
                         <div class="modal-body">
                             <div class="form-group">
                                 <label for="nombre_plan">Nombre</label>
-                                <input type="text" class="form-control" id="nombre_plan" name="nombre_plan" required>
+                                <input type="text" class="form-control" id="nombre_plan" name="nombre_plan"
+                                    placeholder="Ej. Ultra" required>
                             </div>
                             <div class="form-group">
-                                <label for="precio">Precio mensual ($)</label>
+                                <label for="precio">Precio mensual (₡)</label>
                                 <input type="number" step="0.01" min="0" class="form-control" id="precio"
-                                    name="precio" required>
+                                    name="precio" placeholder="Ej. 8500" required>
                             </div>
                             <div class="form-group">
                                 <label for="calidad">Resolución</label>
-                                <select class="form-control" id="calidad" name="calidad">
-                                    <option>1080p</option>
-                                    <option>4K</option>
+                                <select class="form-control" id="calidad" name="calidad" required>
+                                    <option value="SD">SD</option>
+                                    <option value="HD">HD</option>
+                                    <option value="FullHD">FullHD</option>
+                                    <option value="4K">4K</option>
                                 </select>
                             </div>
                         </div>

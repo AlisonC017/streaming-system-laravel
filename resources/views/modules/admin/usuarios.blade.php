@@ -11,7 +11,7 @@
                     value="{{ request('buscar') }}" aria-label="Buscar cliente">
                 <select class="form-control mr-3" name="estado" aria-label="Estado">
                     <option value="">Todos los estados</option>
-                    @foreach (['Activa', 'Pendiente', 'Suspendida'] as $e)
+                    @foreach (['Activa', 'Pendiente', 'Suspendida', 'Cancelada'] as $e)
                         <option value="{{ $e }}" @selected(request('estado') === $e)>{{ $e }}</option>
                     @endforeach
                 </select>
@@ -40,26 +40,32 @@
                     <tbody>
                         @forelse ($clientes as $c)
                             <tr>
-                                <td>{{ $c->nombre }} {{ $c->apellidos }}</td>
+                                <td>{{ $c->nombre }}</td>
                                 <td>{{ $c->correo }}</td>
-                                <td>{{ $c->plan ?? '—' }}</td>
+                                <td>{{ $c->plan }}</td>
                                 <td>
                                     <span
-                                        class="badge badge-{{ match ($c->estado_suscripcion) {'Activa' => 'success','Pendiente' => 'warning','Suspendida' => 'danger',default => 'info'} }}">
-                                        {{ $c->estado_suscripcion ?? 'Sin suscripción' }}
+                                        class="badge badge-{{ match ($c->estado) {
+                                            'Activa' => 'success',
+                                            'Pendiente' => 'warning',
+                                            'Suspendida' => 'danger',
+                                            'Cancelada' => 'secondary',
+                                            default => 'info',
+                                        } }}">
+                                        {{ $c->estado }}
                                     </span>
                                 </td>
                                 <td>{{ $c->fecha_registro }}</td>
                                 <td class="text-right">
                                     <a href="{{ route('admin.usuarios.show', $c->id_usuario) }}"
                                         class="btn btn-sm btn-primary">Ver</a>
-                                    @if ($c->estado === 'Activo')
+                                    @if ($c->estado !== 'Cancelada' && $c->estado !== 'Sin suscripcion')
                                         <form method="POST"
                                             action="{{ route('admin.usuarios.cancelar', $c->id_usuario) }}"
                                             class="d-inline"
-                                            onsubmit="return confirm('¿Cancelar la cuenta de {{ $c->nombre }}?')">
+                                            onsubmit="return confirm('¿Cancelar la suscripción de {{ $c->nombre }}?')">
                                             @csrf
-                                            <button type="submit" class="btn btn-sm btn-danger">Cancelar cuenta</button>
+                                            <button type="submit" class="btn btn-sm btn-danger">Cancelar</button>
                                         </form>
                                     @endif
                                 </td>

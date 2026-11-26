@@ -38,7 +38,7 @@
                             <tr>
                                 <td>{{ $s->cliente }}</td>
                                 <td>{{ $s->plan }}</td>
-                                <td>₡{{ number_format($s->precio ?? 0, 2) }}</td>
+                                <td>₡{{ number_format($s->precio ?? ($s->monto ?? 0), 2) }}</td>
                                 <td>{{ $fecha($s->fecha_proximo_cobro) }}</td>
                                 <td>
                                     <span
