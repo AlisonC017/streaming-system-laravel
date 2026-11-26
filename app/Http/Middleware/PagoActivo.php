@@ -20,7 +20,7 @@ class PagoActivo
             ->exists();
 
         if (! $esAdmin && ! $activa) {
-            return redirect()->route('inicio')->with('error', 'Necesitas una sucripcion activa para ver el contenido');
+            return redirect()->route('inicio')->with('error', 'Necesitas una suscripción activa para ver el contenido');
         }
 
         return $next($request);

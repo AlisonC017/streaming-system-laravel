@@ -12,19 +12,14 @@ use App\Http\Controllers\AuditoriaController;
 use App\Http\Controllers\SuscripcionController;
 use App\Http\Controllers\MetodoPagoController;
 use App\Http\Controllers\GoogleAuthController;
-use App\http\Controllers\AdministradorController;
-use \App\Http\Controllers\AdminClientesController;
+use App\Http\Controllers\AdministradorController;
+use App\Http\Controllers\AdminClientesController;
 
-// Inicio real 
+// Inicio real
 Route::get('/', [ContenidoController::class, 'obtenerTodos'])
     ->name('inicio');
 
-//Rutas de reproduccion
-
-Route::get('/reproductor', function () {
-    return view('reproductor');
-})->name('reproductor.index');
-
+// Rutas de reproduccion y progreso: solo usuarios con sesion y suscripcion activa
 Route::middleware(['auth', 'pago.activo'])->group(function () {
     Route::get('/reproductor/{contenidoId}', [ReproductorController::class, 'mostrar'])
         ->name('reproductor.mostrar');
@@ -34,11 +29,20 @@ Route::middleware(['auth', 'pago.activo'])->group(function () {
 
     Route::post('/reproductor/fuentes', [ReproductorController::class, 'obtenerFuentes'])
         ->name('reproductor.fuentes');
+
+    // Progreso de reproduccion (antes estaban sin proteccion)
+    Route::post('/progreso', [ControllerProgreso::class, 'guardar'])
+        ->name('progreso.guardar');
+
+    Route::get('/progreso/{contenidoId}', [ControllerProgreso::class, 'obtener'])
+        ->name('progreso.obtener');
+
+    Route::get('/continuar-viendo', [ControllerProgreso::class, 'continuar'])
+        ->name('progreso.continuar');
 });
 
-// Administracion de fuentes: protegidas hasta que exista autenticacion
-// Cuando haya login, cambiar 'solo.local' por ['auth', 'rol:admin']
-Route::middleware('solo.local')->group(function () {
+// Administracion de fuentes: solo administradores con sesion
+Route::middleware(['auth', 'solo.admin'])->group(function () {
 
     Route::post('/reproductor/fuentes/guardar', [ReproductorController::class, 'guardarFuente'])
         ->name('reproductor.fuentes.guardar');
@@ -46,16 +50,6 @@ Route::middleware('solo.local')->group(function () {
     Route::delete('/reproductor/fuentes/{id}', [ReproductorController::class, 'eliminarFuente'])
         ->name('reproductor.fuentes.eliminar');
 });
-
-//Rutas de progreso de reproduccion
-Route::post('/progreso', [ControllerProgreso::class, 'guardar'])
-    ->name('progreso.guardar');
-
-Route::get('/progreso/{contenidoId}', [ControllerProgreso::class, 'obtener'])
-    ->name('progreso.obtener');
-
-Route::get('/continuar-viendo', [ControllerProgreso::class, 'continuar'])
-    ->name('progreso.continuar');
 
 // rutas de catalogo
 Route::get('/catalogo', [ContenidoController::class, 'obtenerTodos'])
@@ -80,9 +74,11 @@ Route::get('/catalogo/{id}', [ContenidoController::class, 'mostrar'])
     ->name('catalogo.mostrar');
 
 
-// Rutas de login 
+// Rutas de login
 Route::view('/login', 'modules.auth.login')->name('login');
-Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+Route::post('/login', [AuthController::class, 'login'])
+    ->middleware('throttle:5,1')
+    ->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::view('/registro', 'modules.auth.register')->name('register');
 Route::post('/registro', [AuthController::class, 'registrar'])->name('register.post');
@@ -132,46 +128,4 @@ Route::middleware(['auth', 'solo.admin'])->group(function () {
     Route::get('/admin/usuarios', [AdminClientesController::class, 'index'])->name('admin.usuarios');
     Route::get('/admin/administradores', [AdministradorController::class, 'index'])->name('admin.administradores');
     Route::get('/admin/auditoria', [AuditoriaController::class, 'index'])->name('admin.auditoria');
-});
-
-// Rutas prueba logins
-// Rutas demo de CLIENTE: sin nivel
-Route::get('/demo/panel', function () {
-    session()->forget('nivel');
-    session(['nombre' => 'Ali']);
-    return view('modules.cuenta-cliente.panel', [
-        'usuario' => (object) ['nombre' => 'Ali'],
-        'suscripcion' => request('con') ? (object) [
-            'plan' => 'Premium',
-            'precio' => 12.99,
-            'proximo_cobro' => '2026-12-22',
-            'estado' => 'Activa',
-        ] : null,
-        'planes' => [
-            (object) ['id_plan' => 1, 'nombre_plan' => 'Básico', 'calidad' => 'HD', 'precio' => 7.99],
-            (object) ['id_plan' => 2, 'nombre_plan' => 'Premium', 'calidad' => '4K', 'precio' => 12.99],
-        ],
-    ]);
-});
-
-Route::get('/demo/historial', function () {
-    session()->forget('nivel');
-    session(['nombre' => 'Ali']);
-    return view('modules.cuenta-cliente.historial', ['pagos' => []]);
-});
-
-// Rutas demo de ADMIN: con nivel
-Route::get('/demo/admin', function () {
-    session(['nivel' => 'Total', 'nombre' => 'Ali']);
-    return view('modules.admin.dashboard');
-});
-
-Route::get('/demo/salir', function () {
-    session()->forget('nivel');
-    return redirect('/');
-});
-
-Route::get('/demo/auditoria', function () {
-    session(['nivel' => 'Soporte']);
-    return view('modules.admin.auditoria', ['registros' => []]);
 });
