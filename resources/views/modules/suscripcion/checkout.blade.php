@@ -4,23 +4,28 @@
                         sp_registrar_tarjeta_encriptada (si es tarjeta nueva) y sp_procesar_cobro_suscripcion --}}
 @extends('layouts.cuenta')
 
-@section('titulo', 'Confirmar plan · Aetherix')
-@section('titulo_pagina', 'Confirmar suscripción')
-
 @php
     $metodos = $metodos ?? [];
     $suscripcion = $suscripcion ?? null;
     $esCambio = $suscripcion && $suscripcion->estado !== 'Cancelada';
+    $mismoPlan = $esCambio && $suscripcion->id_plan == $plan->id_plan;
+    // si ya esta Activa y cambia de plan, hoy no se cobra: el nuevo precio va en el proximo cobro
+    $cobraHoy = !$esCambio || $suscripcion->estado !== 'Activa';
+    $titulo = $mismoPlan ? 'Pagar suscripción' : ($esCambio ? 'Cambiar de plan' : 'Confirmar suscripción');
     $accion = Route::has('suscripcion.confirmar') ? route('suscripcion.confirmar') : url('/suscripcion/confirmar');
     $urlPlanes = Route::has('planes') ? route('planes') : url('/planes');
 @endphp
+
+@section('titulo', 'Confirmar plan · Aetherix')
+@section('titulo_pagina', $titulo)
+
 
 @section('contenido')
     <div class="banner">
         <div>
             <h2>{{ $plan->nombre_plan }} · {{ $plan->calidad }}</h2>
-            <p>${{ number_format($plan->precio, 2) }} al mes
-                @if ($esCambio)
+            <p>₡{{ number_format($plan->precio, 2) }} al mes
+                @if ($esCambio && !$mismoPlan)
                     · reemplaza tu plan actual ({{ $suscripcion->nombre_plan ?? 'actual' }})
                 @endif
             </p>
@@ -83,11 +88,17 @@
 
         <div class="banner">
             <div>
-                <h2>Total hoy: ${{ number_format($plan->precio, 2) }}</h2>
-                <p>Después se cobra cada mes en la misma fecha.</p>
+                @if ($cobraHoy)
+                    <h2>Total hoy: ₡{{ number_format($plan->precio, 2) }}</h2>
+                    <p>Después se cobra cada mes en la misma fecha.</p>
+                @else
+                    <h2>Hoy no se cobra nada</h2>
+                    <p>Desde tu próximo cobro ({{ \Carbon\Carbon::parse($suscripcion->fecha_proximo_cobro)->format('d/m/Y') }})
+                        pagarás ₡{{ number_format($plan->precio, 2) }} al mes.</p>
+                @endif
             </div>
             <button type="submit" class="btn btn-primary">
-                {{ $esCambio ? 'Confirmar cambio de plan' : 'Pagar y suscribirme' }}
+                {{ $mismoPlan ? 'Pagar ahora' : ($esCambio ? 'Confirmar cambio de plan' : 'Pagar y suscribirme') }}
             </button>
         </div>
     </form>

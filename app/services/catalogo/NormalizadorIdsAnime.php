@@ -39,7 +39,11 @@ class NormalizadorIdsAnime
         $identificador = Identificador::where('contenido_id', $contenido->_id)->first();
 
         if ($identificador && $identificador->tmdb_id) {
-            return (int) $identificador->tmdb_id;
+            if (!$this->esTemporadaPosterior($contenido->titulo) || $identificador->tmdb_temporada) {
+                return (int) $identificador->tmdb_id;
+            }
+
+            $identificador->update(['tmdb_id' => null, 'tmdb_temporada' => null]);
         }
 
         $datos = [];

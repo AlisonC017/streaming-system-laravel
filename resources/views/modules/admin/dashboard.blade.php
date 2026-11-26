@@ -10,7 +10,8 @@
                 <div class="card-header">
                     <h5 class="card-category">Suscripciones activas</h5>
                     <h3 class="card-title"><i class="tim-icons icon-single-02 text-primary"></i>
-                        {{ number_format($suscripcionesActivas) }}</h3>
+                        {{ number_format($suscripcionesActivas) }}
+                    </h3>
                 </div>
             </div>
         </div>
@@ -28,7 +29,8 @@
                 <div class="card-header">
                     <h5 class="card-category">Cobros fallidos</h5>
                     <h3 class="card-title"><i class="tim-icons icon-alert-circle-exc text-primary"></i>
-                        {{ $cobrosFallidos }}</h3>
+                        {{ $cobrosFallidos }}
+                    </h3>
                 </div>
             </div>
         </div>
@@ -65,7 +67,7 @@
                                 <td>{{ $c->plan }}</td>
                                 <td>${{ number_format($c->monto, 2) }}</td>
                                 <td><span
-                                        class="badge badge-{{ match ($c->estado) {'Pagado' => 'success','Pendiente' => 'warning','Fallido' => 'danger',default => 'info'} }}">{{ $c->estado }}</span>
+                                        class="badge badge-{{ match ($c->estado) { 'Exitoso' => 'success', 'Pendiente' => 'warning', 'Fallido' => 'danger', default => 'info'} }}">{{ $c->estado }}</span>
                                 </td>
                             </tr>
                         @empty

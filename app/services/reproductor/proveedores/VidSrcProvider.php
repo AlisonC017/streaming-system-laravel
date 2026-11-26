@@ -5,10 +5,10 @@ namespace App\Services\Reproductor\Proveedores;
 use App\Models\Contenido;
 use App\Models\Episodio;
 use App\Models\Temporada;
-use ResuelveEpisodioTmdb;
 
 class VidSrcProvider implements ProveedorInterface
 {
+    use ResuelveEpisodioTmdb;
     public function obtenerNombre()
     {
         return 'vidsrc';
@@ -17,7 +17,6 @@ class VidSrcProvider implements ProveedorInterface
     public function obtenerFuentes(Contenido $contenido, ?Episodio $episodio = null)
     {
         $fuentes = [];
-
         $id = $this->obtenerTmdbId($contenido);
 
         if ($id == '') {
@@ -46,9 +45,7 @@ class VidSrcProvider implements ProveedorInterface
             }
 
             [$numeroTemporada, $numeroEpisodio] = $posicion;
-
             $url = "https://vidsrc.sh/embed/tv/{$id}/{$numeroTemporada}/{$numeroEpisodio}";
-
             $fuentes[] = $this->armarFuente($contenido, $episodio, $url);
         }
 
