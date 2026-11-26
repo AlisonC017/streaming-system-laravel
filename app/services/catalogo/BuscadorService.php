@@ -8,6 +8,7 @@ use MongoDB\BSON\ObjectId;
 class BuscadorService
 {
     protected $embeddings;
+    private $UMBRAL = 0.60;
 
     public function __construct(EmbeddingService $embeddings)
     {
@@ -25,14 +26,13 @@ class BuscadorService
             'regexp',
             "/" . preg_quote($nombre, '/') . "/i"
         )
-            ->limit(20)
             ->get();
 
         return $contenidos;
     }
 
     // Busqueda hibrida: combina resultados por titulo y por significado.
-    public function buscarHibrido($texto, $tipo = null, $limite = 24)
+    public function buscarHibrido($texto, $tipo = null)
     {
         $tradicionales = collect($this->buscar($texto));
 
@@ -40,14 +40,14 @@ class BuscadorService
             $tradicionales = $tradicionales->where('tipo', $tipo)->values();
         }
 
-        $semanticos = $this->buscarPorSignificado($texto, $tipo, 50);
+        $semanticos = $this->buscarPorSignificado($texto, $tipo);
 
-        return $this->fusionarResultados($tradicionales, $semanticos, $limite);
+        return $this->fusionarResultados($tradicionales, $semanticos);
     }
 
     // Busqueda por significado: compara el texto con los embeddings de contenidos.
     // Solo devuelve contenidos con fuentes activas, ordenados del mas parecido al menos
-    public function buscarPorSignificado($texto, $tipo = null, $limite = 24)
+    public function buscarPorSignificado($texto, $tipo = null)
     {
         $texto = trim((string) $texto);
 
@@ -93,7 +93,14 @@ class BuscadorService
         }
 
         arsort($puntajes);
-        $ids = array_slice(array_keys($puntajes), 0, $limite);
+
+        $ids = [];
+
+        foreach ($puntajes as $id => $puntaje) {
+            if ($puntaje >= $this->UMBRAL) {
+                $ids[] = $id;
+            }
+        }
 
         if (empty($ids)) {
             return collect();
@@ -105,7 +112,7 @@ class BuscadorService
     }
 
     // Combina las posiciones de los resultados tradicionales y semanticos.
-    protected function fusionarResultados($tradicionales, $semanticos, $limite)
+    protected function fusionarResultados($tradicionales, $semanticos)
     {
         $puntajes = [];
         $contenidos = [];
@@ -126,7 +133,7 @@ class BuscadorService
 
         arsort($puntajes);
 
-        $ids = array_slice(array_keys($puntajes), 0, $limite);
+        $ids = array_keys($puntajes);
 
         return collect($ids)
             ->map(fn($id) => $contenidos[$id])

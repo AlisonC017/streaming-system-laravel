@@ -58,17 +58,25 @@ class ContenidoController extends Controller
         $tipo = $request->input('tipo');
         $genero = $request->input('genero');
 
+        if (!$nombre && !$tipo && !$genero) {
+            $contenidos = Contenido::conFuentes()->orderBy('titulo')->paginate(self::POR_PAGINA)->withQueryString();
+            $datosInicio = (int) $request->input('page', 1) === 1 ? $this->datosInicio() : [];
+            return view('modules.catalogo.index', array_merge(compact('contenidos'), $datosInicio));
+        }
+
         // Con texto (y sin genero) primero se intenta la busqueda por significado
         if ($nombre && !$genero) {
             try {
-                $resultados = $buscador->buscarHibrido($nombre, $tipo, self::POR_PAGINA);
+                $resultados = $buscador->buscarHibrido($nombre, $tipo);
 
                 if ($resultados->isNotEmpty()) {
+                    $pagina = LengthAwarePaginator::resolveCurrentPage();
+
                     $contenidos = new LengthAwarePaginator(
-                        $resultados,
+                        $resultados->forPage($pagina, self::POR_PAGINA),
                         $resultados->count(),
                         self::POR_PAGINA,
-                        1,
+                        $pagina,
                         ['path' => $request->url(), 'query' => $request->query()]
                     );
 
