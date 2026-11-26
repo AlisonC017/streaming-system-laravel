@@ -36,12 +36,9 @@
     @include('partials.header')
 
     <main>
-        <main>
-            <div class="alertas-flotantes">
-                @include('partials.alertas')
-            </div>
-            @yield('contenido')
-        </main>
+        <div class="alertas-flotantes">
+            @include('partials.alertas')
+        </div>
         @yield('contenido')
     </main>
 
