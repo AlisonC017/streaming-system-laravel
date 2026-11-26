@@ -56,12 +56,14 @@
                                     <input type="radio" name="id_metodo" id="metodo{{ $m->id_metodo }}"
                                         value="{{ $m->id_metodo }}" @checked(old('id_metodo', $i === 0 ? $m->id_metodo : null) == $m->id_metodo)>
                                 </td>
-                                <td class="mono"><label for="metodo{{ $m->id_metodo }}">**** {{ $m->ultimos4 }}</label></td>
+                                <td class="mono"><label for="metodo{{ $m->id_metodo }}">**** {{ $m->ultimos4 }}</label>
+                                </td>
                                 <td class="mono">{{ \Carbon\Carbon::parse($m->fecha_vencimiento)->format('m/Y') }}</td>
                             </tr>
                         @endforeach
                         <tr>
-                            <td><input type="radio" name="id_metodo" id="metodoNuevo" value="nueva" @checked(old('id_metodo') === 'nueva')></td>
+                            <td><input type="radio" name="id_metodo" id="metodoNuevo" value="nueva"
+                                    @checked(old('id_metodo') === 'nueva')></td>
                             <td colspan="2"><label for="metodoNuevo">Usar una tarjeta nueva</label></td>
                         </tr>
                     </tbody>
@@ -75,8 +77,8 @@
             <small>Tarjeta nueva</small>
             <p>Se guarda encriptada; en tu cuenta solo verás los últimos 4 dígitos.</p>
             <div class="field">
-                <input name="numero_tarjeta" id="numero_tarjeta" inputmode="numeric" autocomplete="cc-number"
-                    maxlength="19" pattern="[0-9 ]{13,19}" placeholder=" ">
+                <input name="numero_tarjeta" id="numero_tarjeta" inputmode="numeric" autocomplete="cc-number" maxlength="19"
+                    pattern="[0-9 ]{13,19}" placeholder=" ">
                 <label for="numero_tarjeta">Número de tarjeta</label>
             </div>
             <div class="field">
@@ -93,7 +95,8 @@
                     <p>Después se cobra cada mes en la misma fecha.</p>
                 @else
                     <h2>Hoy no se cobra nada</h2>
-                    <p>Desde tu próximo cobro ({{ \Carbon\Carbon::parse($suscripcion->fecha_proximo_cobro)->format('d/m/Y') }})
+                    <p>Desde tu próximo cobro
+                        ({{ \Carbon\Carbon::parse($suscripcion->fecha_proximo_cobro)->format('d/m/Y') }})
                         pagarás ₡{{ number_format($plan->precio, 2) }} al mes.</p>
                 @endif
             </div>
@@ -107,8 +110,8 @@
 @push('scripts')
     <script>
         // muestra el formulario de tarjeta nueva solo cuando se elige esa opcion
-        document.querySelectorAll('input[name="id_metodo"]').forEach(function (r) {
-            r.addEventListener('change', function () {
+        document.querySelectorAll('input[name="id_metodo"]').forEach(function(r) {
+            r.addEventListener('change', function() {
                 document.getElementById('tarjetaNueva').hidden = this.value !== 'nueva';
             });
         });

@@ -13,6 +13,7 @@ class AdminPanelController extends Controller
 
     public function dashboard()
     {
+
         $datos = [
             'suscripcionesActivas' => 0,
             'ingresosMes' => 0,
@@ -20,6 +21,13 @@ class AdminPanelController extends Controller
             'cancelaciones' => 0,
             'ultimosCobros' => collect(),
         ];
+
+        if (session('nivel') === 'Contenido') {
+            $datos['ultimosCobros'] = $datos['ultimosCobros']->map(function ($c, $i) {
+                $c->cliente = 'Cliente #' . ($i + 1);
+                return $c;
+            });
+        }
 
         try {
             $r = DB::select('EXEC sp_admin_resumen')[0] ?? null;
@@ -39,6 +47,8 @@ class AdminPanelController extends Controller
 
     public function usuarios(Request $request)
     {
+        abort_unless(in_array(session('nivel'), ['Total', 'Soporte'], true), 403);
+
         try {
             $clientes = collect(DB::select('EXEC sp_admin_usuarios ?, ?', [
                 $request->input('buscar'),
@@ -54,6 +64,8 @@ class AdminPanelController extends Controller
 
     public function usuarioShow($id)
     {
+        abort_unless(in_array(session('nivel'), ['Total', 'Soporte'], true), 403);
+
         try {
             $cliente = DB::select('EXEC sp_admin_cliente ?', [$id])[0] ?? null;
             $pagos = collect(DB::select('EXEC sp_admin_cliente_pagos ?', [$id]));
@@ -122,6 +134,8 @@ class AdminPanelController extends Controller
 
     public function administradores(Request $request)
     {
+        abort_unless(session('nivel') === 'Total', 403);
+
         try {
             $administradores = collect(DB::select('EXEC sp_admin_administradores ?, ?', [
                 $request->input('buscar'),
@@ -242,6 +256,8 @@ class AdminPanelController extends Controller
 
     public function cobros()
     {
+        abort_unless(in_array(session('nivel'), ['Total', 'Soporte'], true), 403);
+
         try {
             $suscripciones = collect(DB::select('EXEC sp_admin_suscripciones'));
             $cobros = collect(DB::select('EXEC sp_admin_cobros ?', [50]));

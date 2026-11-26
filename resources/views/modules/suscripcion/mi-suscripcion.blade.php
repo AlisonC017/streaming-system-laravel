@@ -15,9 +15,10 @@
     $fecha = fn($f) => $f ? \Carbon\Carbon::parse($f)->format('d/m/Y') : '—';
     $urlCancelar = Route::has('suscripcion.cancelar') ? route('suscripcion.cancelar') : url('/suscripcion/cancelar');
     $urlMetodos = Route::has('pagos.metodos') ? route('pagos.metodos') : url('/pagos/metodos');
-    $urlPagar = $suscripcion && Route::has('suscripcion.checkout')
-        ? route('suscripcion.checkout', $suscripcion->id_plan)
-        : null;
+    $urlPagar =
+        $suscripcion && Route::has('suscripcion.checkout')
+            ? route('suscripcion.checkout', $suscripcion->id_plan)
+            : null;
 @endphp
 
 @section('contenido')
@@ -36,14 +37,18 @@
                 <p>
                     @switch($suscripcion->estado)
                         @case('Activa')
-                            Tu próximo cobro de ₡{{ number_format($suscripcion->precio, 2) }} es el {{ $fecha($suscripcion->fecha_proximo_cobro) }}.
+                            Tu próximo cobro de ₡{{ number_format($suscripcion->precio, 2) }} es el
+                            {{ $fecha($suscripcion->fecha_proximo_cobro) }}.
                         @break
+
                         @case('Pendiente')
                             Tu suscripción está pendiente del primer pago.
                         @break
+
                         @case('Suspendida')
                             No pudimos cobrar tu tarjeta. Actualiza tu método de pago para seguir viendo.
                         @break
+
                         @case('Cancelada')
                             Cancelaste tu suscripción el {{ $fecha($suscripcion->fecha_cancelacion) }}.
                         @break
