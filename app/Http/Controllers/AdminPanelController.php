@@ -356,10 +356,17 @@ class AdminPanelController extends Controller
                 return "Cobro {$n}: realizado";
             } catch (\Throwable $e) {
                 $msg = preg_match('/\[SQL Server\](.*?)\s*\(Connection:/s', $e->getMessage(), $m)
-                    ? trim($m[1]) : 'error';
+                    ? trim($m[1])
+                    : get_class($e) . ': ' . $e->getMessage();
                 return "Cobro {$n}: rechazado ({$msg})";
             }
         };
+
+        $root = getenv('SystemRoot') ?: 'C:\\Windows';
+        foreach (['SystemRoot' => $root, 'windir' => $root] as $k => $v) {
+            putenv("$k=$v");
+            $_SERVER[$k] = $_ENV[$k] = $v;
+        }
 
         // Dos procesos PHP distintos, cada uno con su propia conexión a SQL Server
         $resultado = Concurrency::run([
